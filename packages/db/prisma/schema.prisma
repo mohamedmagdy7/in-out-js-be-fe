@@ -7,8 +7,186 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder model — full schema comes in Task 02
-model Placeholder {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  HR_ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Company ─────────────────────────────────────────────
+
+model Company {
+  id                    String   @id @default(uuid())
+  name                  String
+  slug                  String   @unique
+  timezone              String   @default("UTC")
+  daily_hours_threshold Float    @default(8)
+  logo_url              String?
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  users          User[]
+  departments    Department[]
+  shifts         Shift[]
+  leave_types    LeaveType[]
+  attendance_logs AttendanceLog[]
+  leave_requests LeaveRequest[]
+}
+
+// ─── User ────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  company_id    String
+  email         String
+  password      String
+  first_name    String
+  last_name     String
+  phone         String?
+  avatar_url    String?
+  role          Role     @default(EMPLOYEE)
+  department_id String?
+  shift_id      String?
+  manager_id    String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  company           Company        @relation(fields: [company_id], references: [id])
+  department        Department?    @relation(fields: [department_id], references: [id])
+  shift             Shift?         @relation(fields: [shift_id], references: [id])
+  manager           User?          @relation("ManagerEmployee", fields: [manager_id], references: [id])
+  managed_employees User[]         @relation("ManagerEmployee")
+  attendance_logs   AttendanceLog[]
+  leave_requests    LeaveRequest[] @relation("UserLeaveRequests")
+  reviewed_leaves   LeaveRequest[] @relation("LeaveReviewer")
+  refresh_tokens    RefreshToken[]
+
+  @@unique([email, company_id])
+}
+
+// ─── Department ──────────────────────────────────────────
+
+model Department {
+  id         String   @id @default(uuid())
+  company_id String
+  name       String
+  created_at DateTime @default(now())
+
+  company Company @relation(fields: [company_id], references: [id])
+  users   User[]
+
+  @@unique([company_id, name])
+}
+
+// ─── Shift ───────────────────────────────────────────────
+
+model Shift {
+  id         String   @id @default(uuid())
+  company_id String
+  name       String
+  start_time String
+  end_time   String
+  is_default Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  company Company @relation(fields: [company_id], references: [id])
+  users   User[]
+
+  @@unique([company_id, name])
+}
+
+// ─── AttendanceLog ───────────────────────────────────────
+
+model AttendanceLog {
+  id               String           @id @default(uuid())
+  company_id       String
+  user_id          String
+  date             DateTime         @db.Date
+  check_in_at      DateTime?
+  check_out_at     DateTime?
+  check_in_lat     Float?
+  check_in_lng     Float?
+  check_out_lat    Float?
+  check_out_lng    Float?
+  work_minutes     Int?
+  overtime_minutes Int?
+  notes            String?
+  status           AttendanceStatus @default(PRESENT)
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id])
+  user    User    @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, date])
+}
+
+// ─── LeaveType ───────────────────────────────────────────
+
+model LeaveType {
+  id            String   @id @default(uuid())
+  company_id    String
+  name          String
+  days_per_year Int      @default(0)
+  is_paid       Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  company        Company        @relation(fields: [company_id], references: [id])
+  leave_requests LeaveRequest[]
+
+  @@unique([company_id, name])
+}
+
+// ─── LeaveRequest ────────────────────────────────────────
+
+model LeaveRequest {
+  id            String      @id @default(uuid())
+  company_id    String
+  user_id       String
+  leave_type_id String
+  start_date    DateTime    @db.Date
+  end_date      DateTime    @db.Date
+  total_days    Int
+  reason        String?
+  status        LeaveStatus @default(PENDING)
+  reviewed_by   String?
+  reviewed_at   DateTime?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  company    Company   @relation(fields: [company_id], references: [id])
+  user       User      @relation("UserLeaveRequests", fields: [user_id], references: [id])
+  leave_type LeaveType @relation(fields: [leave_type_id], references: [id])
+  reviewer   User?     @relation("LeaveReviewer", fields: [reviewed_by], references: [id])
+}
+
+// ─── RefreshToken ────────────────────────────────────────
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
 }
