@@ -1,11 +1,13 @@
-# Task 02 — Database Schema (Prisma)
+# Task 02 — Database Schema (Prisma) [Done]
 
 ## Goal
+
 Define the full PostgreSQL schema in `packages/db/prisma/schema.prisma`. Run the initial migration. This is the foundation every other task depends on.
 
 ## Models to Create
 
 ### Company
+
 ```
 Company {
   id                    String   @id @default(uuid())
@@ -27,6 +29,7 @@ Company {
 ```
 
 ### User
+
 ```
 User {
   id           String   @id @default(uuid())
@@ -67,6 +70,7 @@ enum Role {
 ```
 
 ### Department
+
 ```
 Department {
   id         String   @id @default(uuid())
@@ -82,6 +86,7 @@ Department {
 ```
 
 ### Shift
+
 ```
 Shift {
   id           String   @id @default(uuid())
@@ -100,6 +105,7 @@ Shift {
 ```
 
 ### AttendanceLog
+
 ```
 AttendanceLog {
   id            String    @id @default(uuid())
@@ -135,6 +141,7 @@ enum AttendanceStatus {
 ```
 
 ### LeaveType
+
 ```
 LeaveType {
   id               String @id @default(uuid())
@@ -152,6 +159,7 @@ LeaveType {
 ```
 
 ### LeaveRequest
+
 ```
 LeaveRequest {
   id            String      @id @default(uuid())
@@ -182,6 +190,7 @@ enum LeaveStatus {
 ```
 
 ### RefreshToken
+
 ```
 RefreshToken {
   id         String   @id @default(uuid())
@@ -195,11 +204,15 @@ RefreshToken {
 ```
 
 ## Prisma Middleware (add to `packages/db/src/index.ts`)
+
 Add a soft-delete / company isolation middleware:
+
 - Automatically scope all queries to `company_id` is NOT needed at Prisma level (done in service layer), but add a logging middleware for dev.
 
 ## Seed File (`packages/db/prisma/seed.ts`)
+
 Create a seed that inserts:
+
 1. One `Company`: `{ name: "Acme Corp", slug: "acme", timezone: "Africa/Cairo" }`
 2. One `SUPER_ADMIN` user: `email: "super@admin.com", password: "Admin123!"`
 3. One `HR_ADMIN` user for Acme: `email: "hr@acme.com", password: "Admin123!"`
@@ -210,6 +223,7 @@ Create a seed that inserts:
 8. Two leave types: "Annual Leave" (21 days), "Sick Leave" (10 days)
 
 ## Acceptance Criteria
+
 - [ ] `pnpm --filter @repo/db db:migrate` runs without errors
 - [ ] `pnpm --filter @repo/db db:seed` populates all seed data
 - [ ] All relations and unique constraints are correct
@@ -218,6 +232,7 @@ Create a seed that inserts:
 - [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions
 
 ## Notes
+
 - All `id` fields use UUID (`@default(uuid())`)
 - All timestamps in UTC
 - `date` fields on `AttendanceLog` and `LeaveRequest` use `@db.Date` (date only, no time)
