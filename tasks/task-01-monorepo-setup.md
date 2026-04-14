@@ -1,11 +1,13 @@
-# Task 01 — Monorepo & Project Scaffold
+# Task 01 — Monorepo & Project Scaffold [Done]
 
 ## Goal
+
 Bootstrap a Turborepo monorepo with two apps (`web`, `api`) and two shared packages (`db`, `shared`). Everything should run with a single `pnpm dev` from the root.
 
 ## What to Build
 
 ### Root structure
+
 ```
 /
 ├── apps/
@@ -20,12 +22,14 @@ Bootstrap a Turborepo monorepo with two apps (`web`, `api`) and two shared packa
 ```
 
 ### `apps/web`
+
 - Next.js 14 with App Router
 - Tailwind CSS
 - TypeScript
 - `next.config.js` with `transpilePackages: ['@repo/shared']`
 
 ### `apps/api`
+
 - Express + TypeScript
 - `ts-node-dev` for dev hot reload
 - CORS configured
@@ -33,18 +37,22 @@ Bootstrap a Turborepo monorepo with two apps (`web`, `api`) and two shared packa
 - Reads `.env` via `dotenv`
 
 ### `packages/db`
+
 - Prisma initialized (empty schema for now — schema comes in Task 02)
 - Exports `PrismaClient` as `db`
 - Package name: `@repo/db`
 
 ### `packages/shared`
+
 - Shared TypeScript types (empty for now, populated in later tasks)
 - Package name: `@repo/shared`
 
 ### `turbo.json`
+
 - Pipelines for: `dev`, `build`, `lint`, `db:migrate`, `db:generate`
 
 ### Root `.env.example`
+
 ```env
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/checkin_db
@@ -70,6 +78,7 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ## Acceptance Criteria
+
 - [ ] `pnpm install` from root installs all workspaces
 - [ ] `pnpm dev` starts both `web` (port 3000) and `api` (port 4000) concurrently
 - [ ] `GET http://localhost:4000/health` returns `{ "status": "ok" }`
@@ -79,6 +88,7 @@ NEXT_PUBLIC_API_URL=http://localhost:4000
 - [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions
 
 ## Notes
+
 - Use `pnpm` as the package manager
 - Node version: 20+
 - All `tsconfig.json` files should extend a root `tsconfig.base.json`
