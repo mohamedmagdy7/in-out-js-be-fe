@@ -1,11 +1,13 @@
-# Task 03 — Authentication (JWT + Roles)
+# Task 03 — Authentication (JWT + Roles) [Done]
 
 ## Goal
+
 Build the full auth system in `apps/api`. JWT-based with access + refresh tokens, role-based middleware, and a `super_admin` bootstrap flow.
 
 ## Endpoints to Build
 
 ### Public routes (no auth required)
+
 ```
 POST /api/auth/login
 POST /api/auth/refresh
@@ -13,6 +15,7 @@ POST /api/auth/logout
 ```
 
 ### Protected (any authenticated user)
+
 ```
 GET  /api/auth/me
 ```
@@ -22,6 +25,7 @@ GET  /api/auth/me
 ## Endpoint Specs
 
 ### `POST /api/auth/login`
+
 **Body**: `{ email, password, company_slug? }`
 
 - If `company_slug` is provided → find user by `(email, company_id)` for that company
@@ -32,6 +36,7 @@ GET  /api/auth/me
 - Set refresh token as `httpOnly` cookie as well
 
 **Response**:
+
 ```json
 {
   "access_token": "...",
@@ -48,16 +53,19 @@ GET  /api/auth/me
 ```
 
 ### `POST /api/auth/refresh`
+
 - Read refresh token from cookie or body `{ refresh_token }`
 - Verify it exists in DB and is not expired
 - Issue new access token
 - Rotate refresh token (delete old, insert new)
 
 ### `POST /api/auth/logout`
+
 - Invalidate refresh token from DB
 - Clear cookie
 
 ### `GET /api/auth/me`
+
 - Requires `Authorization: Bearer <token>`
 - Return current user (no password)
 
@@ -66,22 +74,26 @@ GET  /api/auth/me
 ## Middleware to Build
 
 ### `authenticate` middleware
+
 - Extract JWT from `Authorization: Bearer` header
 - Verify and decode using `JWT_ACCESS_SECRET`
 - Attach `req.user = { id, email, role, company_id }` to request
 - Return `401` if missing or invalid
 
 ### `authorize(...roles: Role[])` middleware
+
 - Usage: `router.get('/admin', authenticate, authorize('HR_ADMIN', 'SUPER_ADMIN'), handler)`
 - Returns `403` if user's role is not in allowed list
 
 ### `requireCompany` middleware
+
 - Ensures `req.user.company_id` exists
 - Used to block `SUPER_ADMIN` from company-scoped routes
 
 ---
 
 ## File Structure
+
 ```
 apps/api/src/
 ├── modules/
@@ -101,28 +113,30 @@ apps/api/src/
 ---
 
 ## Shared Types (`packages/shared/src/auth.types.ts`)
+
 ```typescript
 export type JwtPayload = {
-  sub: string        // user id
-  email: string
-  role: Role
-  company_id: string | null
-}
+  sub: string; // user id
+  email: string;
+  role: Role;
+  company_id: string | null;
+};
 
 export type AuthUser = {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  role: Role
-  company_id: string | null
-  company_slug: string | null
-}
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: Role;
+  company_id: string | null;
+  company_slug: string | null;
+};
 ```
 
 ---
 
 ## Security Requirements
+
 - Passwords hashed with bcrypt (rounds: 12)
 - Access token expires in `JWT_ACCESS_EXPIRES_IN` (default 15m)
 - Refresh token expires in `JWT_REFRESH_EXPIRES_IN` (default 7d)
@@ -133,6 +147,7 @@ export type AuthUser = {
 ---
 
 ## Acceptance Criteria
+
 - [ ] `POST /api/auth/login` with seed HR admin credentials returns tokens
 - [ ] `GET /api/auth/me` with valid token returns user
 - [ ] `GET /api/auth/me` with expired/missing token returns `401`
