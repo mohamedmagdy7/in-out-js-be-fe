@@ -1,6 +1,7 @@
-# Task 04 — Company Management (Super Admin)
+# Task 04 — Company Management (Super Admin) [Done]
 
 ## Goal
+
 Build the company management module. Only `SUPER_ADMIN` can access these routes. Covers creating companies, inviting the first HR admin, and managing company status.
 
 ## Endpoints
@@ -22,12 +23,15 @@ All routes require: `authenticate` + `authorize('SUPER_ADMIN')`
 ## Endpoint Specs
 
 ### `GET /api/companies`
+
 - Pagination: `?page=1&limit=20`
 - Filter: `?search=acme&is_active=true`
 - Returns: company list with `employee_count` aggregated
 
 ### `POST /api/companies`
+
 **Body**:
+
 ```json
 {
   "name": "Acme Corp",
@@ -36,23 +40,29 @@ All routes require: `authenticate` + `authorize('SUPER_ADMIN')`
   "daily_hours_threshold": 8
 }
 ```
+
 - Validate slug is URL-safe (`/^[a-z0-9-]+$/`)
 - Slug must be unique
 - Auto-create default `LeaveType` records for the company: "Annual Leave" (21 days), "Sick Leave" (10 days)
 - Auto-create default `Shift`: "Standard" (09:00–17:00)
 
 ### `PATCH /api/companies/:id`
+
 - Updatable fields: `name`, `timezone`, `daily_hours_threshold`, `logo_url`, `is_active`
 - Slug is NOT updatable after creation
 
 ### `POST /api/companies/:id/invite-admin`
+
 **Body**: `{ email, first_name, last_name, password }`
+
 - Creates a `User` with `role: HR_ADMIN` in the given company
 - Validates company exists and `is_active`
 - Email must be unique within the company
 
 ### `GET /api/companies/:id/stats`
+
 **Response**:
+
 ```json
 {
   "total_employees": 42,
@@ -66,7 +76,9 @@ All routes require: `authenticate` + `authorize('SUPER_ADMIN')`
 ---
 
 ## Validation
+
 Use `zod` for all request body validation. Create a validation middleware:
+
 ```typescript
 // middleware/validate.ts
 export const validate = (schema: ZodSchema) => (req, res, next) => { ... }
@@ -75,6 +87,7 @@ export const validate = (schema: ZodSchema) => (req, res, next) => { ... }
 ---
 
 ## File Structure
+
 ```
 apps/api/src/modules/companies/
 ├── companies.router.ts
@@ -86,6 +99,7 @@ apps/api/src/modules/companies/
 ---
 
 ## Acceptance Criteria
+
 - [ ] `EMPLOYEE` or `MANAGER` token gets `403` on all company routes
 - [ ] Creating a company auto-creates default leave types and shift
 - [ ] Slug validation rejects `"Acme Corp"` (has space and uppercase)

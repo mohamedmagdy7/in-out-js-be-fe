@@ -27,18 +27,22 @@ export async function login(
 
     user = await db.user.findUnique({
       where: { email_company_id: { email, company_id: company.id } },
-      include: { company: { select: { slug: true } } },
+      include: { company: { select: { slug: true, is_active: true } } },
     });
   } else {
     // No company_slug → only allow SUPER_ADMIN
     user = await db.user.findFirst({
       where: { email, role: "SUPER_ADMIN" },
-      include: { company: { select: { slug: true } } },
+      include: { company: { select: { slug: true, is_active: true } } },
     });
   }
 
   if (!user || !user.is_active) {
     throw new AuthError("Invalid credentials", 401);
+  }
+
+  if (user.company && !user.company.is_active) {
+    throw new AuthError("Company is deactivated", 403);
   }
 
   const valid = await comparePassword(password, user.password);
@@ -90,7 +94,7 @@ export async function refresh(rawToken: string): Promise<{
     where: { token: hashed },
     include: {
       user: {
-        include: { company: { select: { slug: true } } },
+        include: { company: { select: { slug: true, is_active: true } } },
       },
     },
   });
@@ -134,7 +138,7 @@ export async function logout(rawToken: string): Promise<void> {
 export async function getMe(userId: string): Promise<AuthUser> {
   const user = await db.user.findUnique({
     where: { id: userId },
-    include: { company: { select: { slug: true } } },
+    include: { company: { select: { slug: true, is_active: true } } },
   });
 
   if (!user) throw new AuthError("User not found", 404);

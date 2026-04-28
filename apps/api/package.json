@@ -16,7 +16,8 @@
     "dotenv": "^16.4.0",
     "express": "^4.19.0",
     "express-rate-limit": "^8.3.2",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
