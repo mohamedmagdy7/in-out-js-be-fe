@@ -70,20 +70,21 @@ async function main() {
   });
 
   // 5. Users
-  const superAdmin = await prisma.user.upsert({
-    where: {
-      email_company_id: { email: "super@admin.com", company_id: company.id },
-    },
-    update: {},
-    create: {
-      company_id: company.id,
-      email: "super@admin.com",
-      password: hashPassword("Admin123!"),
-      first_name: "Super",
-      last_name: "Admin",
-      role: Role.SUPER_ADMIN,
-    },
+  // SUPER_ADMIN has no company — find by email+role, create if missing
+  let superAdmin = await prisma.user.findFirst({
+    where: { email: "super@admin.com", role: Role.SUPER_ADMIN },
   });
+  if (!superAdmin) {
+    superAdmin = await prisma.user.create({
+      data: {
+        email: "super@admin.com",
+        password: hashPassword("Admin123!"),
+        first_name: "Super",
+        last_name: "Admin",
+        role: Role.SUPER_ADMIN,
+      },
+    });
+  }
 
   const hrAdmin = await prisma.user.upsert({
     where: {

@@ -55,7 +55,7 @@ model Company {
 
 model User {
   id            String   @id @default(uuid())
-  company_id    String
+  company_id    String?
   email         String
   password      String
   first_name    String
@@ -70,7 +70,7 @@ model User {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  company           Company        @relation(fields: [company_id], references: [id])
+  company           Company?       @relation(fields: [company_id], references: [id])
   department        Department?    @relation(fields: [department_id], references: [id])
   shift             Shift?         @relation(fields: [shift_id], references: [id])
   manager           User?          @relation("ManagerEmployee", fields: [manager_id], references: [id])

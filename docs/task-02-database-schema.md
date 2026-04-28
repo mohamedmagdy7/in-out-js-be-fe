@@ -27,6 +27,7 @@ Full PostgreSQL database schema using Prisma ORM in `packages/db/prisma/schema.p
 
 - **UUIDs** for all primary keys (`@default(uuid())`)
 - **Multi-tenancy** via `company_id` on all business models. Enforced at service layer, not Prisma middleware.
+- **User.company_id is nullable** — `SUPER_ADMIN` users exist without a company (SaaS-level role).
 - **Email uniqueness** is per-company (`@@unique([email, company_id])`) — same email can exist in different companies.
 - **Self-referential User relation** for manager-employee hierarchy (`ManagerEmployee` relation).
 - **Date-only fields** on `AttendanceLog.date`, `LeaveRequest.start_date/end_date` using `@db.Date`.
@@ -40,7 +41,7 @@ Run `pnpm --filter @repo/db db:seed` to populate:
 | Entity | Details |
 |--------|---------|
 | Company | Acme Corp (`slug: acme`, timezone: Africa/Cairo) |
-| Users | super@admin.com (SUPER_ADMIN), hr@acme.com (HR_ADMIN), manager@acme.com (MANAGER), alice@acme.com & bob@acme.com (EMPLOYEE) |
+| Users | super@admin.com (SUPER_ADMIN, no company), hr@acme.com (HR_ADMIN), manager@acme.com (MANAGER), alice@acme.com & bob@acme.com (EMPLOYEE) |
 | Departments | Engineering, Operations |
 | Shift | Standard (09:00–17:00, default) |
 | Leave Types | Annual Leave (21 days), Sick Leave (10 days) |
