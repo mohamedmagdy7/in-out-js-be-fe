@@ -1,6 +1,7 @@
 # Task 07 — Attendance Records & History
 
 ## Goal
+
 Build the attendance history and summary endpoints. Employees see their own records. Managers see their team. HR Admins see the whole company.
 
 ## Endpoints
@@ -19,57 +20,81 @@ GET /api/attendance/summary/employee/:id      → summary for specific employee 
 ## Endpoint Specs
 
 ### `GET /api/attendance/my`
+
 Query params: `?from=2025-01-01&to=2025-01-31&status=LATE`
 
-Returns paginated attendance logs for the authenticated user:
+Returns paginated attendance logs for the authenticated user. Each log includes its sessions array.
+
+**Live enrichment rule**: if any log's `date` equals today (in the company timezone) and there is an open session (`check_out_at = null`), compute its elapsed minutes on the fly (`now() - check_in_at`) and add it to `total_work_minutes` before returning. Do **not** persist this enriched value — the stored log stays unchanged until the employee actually checks out.
+
 ```json
 {
   "data": [
     {
       "id": "uuid",
       "date": "2025-01-15",
-      "check_in_at": "2025-01-15T07:02:00Z",
-      "check_out_at": "2025-01-15T15:30:00Z",
-      "work_minutes": 508,
+      "total_work_minutes": 508,
       "overtime_minutes": 28,
       "status": "PRESENT",
+      "is_live": false,
       "formatted": {
-        "work_hours": "8h 28m",
-        "overtime": "0h 28m",
-        "check_in": "09:02",
-        "check_out": "17:30"
-      }
+        "total_work_hours": "8h 28m",
+        "overtime": "0h 28m"
+      },
+      "sessions": [
+        {
+          "id": "uuid",
+          "check_in_at": "2025-01-15T07:02:00Z",
+          "check_out_at": "2025-01-15T11:00:00Z",
+          "duration_minutes": 238,
+          "formatted_duration": "3h 58m"
+        },
+        {
+          "id": "uuid",
+          "check_in_at": "2025-01-15T12:00:00Z",
+          "check_out_at": "2025-01-15T15:30:00Z",
+          "duration_minutes": 270,
+          "formatted_duration": "4h 30m"
+        }
+      ]
     }
   ],
   "pagination": { "page": 1, "limit": 30, "total": 22 }
 }
 ```
 
-Times in formatted should be in the company's local timezone.
+`is_live: true` is set when the returned `total_work_minutes` includes an active session's elapsed time. The frontend can use this flag to show a live indicator (e.g. a pulsing dot next to the work hours). Times in `formatted` are in the company's local timezone.
 
 ### `GET /api/attendance/company`
+
 HR_ADMIN only. Params: `?from=&to=&department_id=&employee_id=&status=&page=&limit=`
 
-Returns same structure but for all employees in the company, with `user` nested:
+Returns the same structure as `GET /api/attendance/my` but for all employees in the company, with `user` nested. Apply the same **live enrichment rule** — for any employee who has an open session today, add elapsed minutes to their `total_work_minutes` on the fly before returning.
+
 ```json
 {
   "data": [
     {
       "user": { "id": "...", "full_name": "John Doe", "department": "Engineering" },
-      "date": "...",
-      ...
+      "date": "2025-01-15",
+      "total_work_minutes": 508,
+      "is_live": true,
+      "sessions": [...]
     }
   ]
 }
 ```
 
 ### `GET /api/attendance/team`
-MANAGER only. Same as company endpoint but scoped to employees with `manager_id = req.user.id`.
+
+MANAGER only. Same as company endpoint but scoped to employees with `manager_id = req.user.id`. Apply the same **live enrichment rule** for today's open sessions.
 
 ### `GET /api/attendance/summary/me`
+
 Query: `?period=monthly&year=2025&month=3` OR `?period=weekly&week_start=2025-03-10`
 
 **Response**:
+
 ```json
 {
   "period": "March 2025",
@@ -89,6 +114,7 @@ Query: `?period=monthly&year=2025&month=3` OR `?period=weekly&week_start=2025-03
 ```
 
 ### `GET /api/attendance/summary/employee/:id`
+
 Same as above but for a specific employee. Accessible by `HR_ADMIN` and the employee's `MANAGER`.
 
 ---
@@ -104,7 +130,9 @@ DELETE /api/attendance/admin/sessions/:id      → HR_ADMIN removes a session
 ```
 
 ### `POST /api/attendance/admin/mark`
+
 HR_ADMIN creates a daily log manually with no sessions (e.g. marking ABSENT):
+
 ```json
 {
   "user_id": "uuid",
@@ -113,11 +141,14 @@ HR_ADMIN creates a daily log manually with no sessions (e.g. marking ABSENT):
   "notes": "Employee called in sick"
 }
 ```
+
 - Creates `AttendanceLog` with `total_work_minutes = 0`, `overtime_minutes = 0`
 - Does not create any sessions
 
 ### `PATCH /api/attendance/admin/logs/:id`
+
 HR_ADMIN updates log-level fields:
+
 ```json
 {
   "status": "HALF_DAY",
@@ -126,7 +157,9 @@ HR_ADMIN updates log-level fields:
 ```
 
 ### `POST /api/attendance/admin/sessions`
+
 HR_ADMIN adds a manual session to an existing log:
+
 ```json
 {
   "log_id": "uuid",
@@ -135,48 +168,93 @@ HR_ADMIN adds a manual session to an existing log:
   "notes": "Added manually — system error"
 }
 ```
+
 - Computes `duration_minutes` from the times
 - Calls `recomputeLogTotals(log_id)` after inserting
 
 ### `PATCH /api/attendance/admin/sessions/:id`
+
 HR_ADMIN edits an existing session's times:
+
 ```json
 {
   "check_in_at": "2025-03-15T09:00:00Z",
   "check_out_at": "2025-03-15T17:00:00Z"
 }
 ```
+
 - Recomputes `duration_minutes` from new times
 - Calls `recomputeLogTotals(log_id)` after update
 
 ### `DELETE /api/attendance/admin/sessions/:id`
+
 - Removes the session
 - Calls `recomputeLogTotals(log_id)` after deletion
 
 ---
 
 ## Computed Field: `attendance_rate`
+
 ```
 attendance_rate = days_present / working_days * 100
 ```
+
 `working_days` = total calendar days in period excluding weekends (Saturday, Sunday). For companies with custom weekends, use a config field (skip for now, assume Sat+Sun off).
 
 ---
 
+## Live Enrichment Helper (`attendance.helpers.ts`)
+
+Add a helper used by all list/summary endpoints to enrich logs that include today:
+
+```typescript
+export function enrichWithActiveSession(
+  log: AttendanceLog & { sessions: AttendanceSession[] },
+  now: DateTime,
+): EnrichedLog {
+  const activeSession = log.sessions.find((s) => s.check_out_at === null);
+  if (!activeSession) return { ...log, is_live: false };
+
+  const elapsedMinutes = Math.floor(
+    now.diff(DateTime.fromJSDate(activeSession.check_in_at), "minutes").minutes,
+  );
+  const liveTotal = log.total_work_minutes + elapsedMinutes;
+  const thresholdMinutes = /* passed in from company */ 480;
+  const liveOvertime = Math.max(0, liveTotal - thresholdMinutes);
+
+  return {
+    ...log,
+    total_work_minutes: liveTotal,
+    overtime_minutes: liveOvertime,
+    is_live: true,
+  };
+}
+```
+
+This helper is called **only when the log's date equals today** in the company's timezone. For all past dates, return the stored values as-is.
+
+---
+
 ## File Structure
+
 Add to existing `apps/api/src/modules/attendance/`:
+
 ```
 ├── attendance.router.ts       → add new routes
 ├── attendance.controller.ts   → add handlers
 ├── attendance.service.ts      → add history + summary queries
-└── attendance.helpers.ts      → add computeSummary, getWorkingDays
+└── attendance.helpers.ts      → add computeSummary, getWorkingDays, enrichWithActiveSession
 ```
 
 ---
 
 ## Acceptance Criteria
+
 - [ ] `GET /api/attendance/my` with `?from=&to=` returns only records in range, each log includes its sessions array
-- [ ] `GET /api/attendance/team` for a manager returns only their direct reports
+- [ ] Today's log with an open session returns `is_live: true` and `total_work_minutes` includes active session elapsed time
+- [ ] Past logs always return stored `total_work_minutes` with `is_live: false`
+- [ ] `GET /api/attendance/team` for a manager returns only their direct reports, with live enrichment applied to today's entries
+- [ ] `GET /api/attendance/company` applies live enrichment for all currently checked-in employees
 - [ ] Summary `attendance_rate` is computed correctly for a month with known absences
 - [ ] HR Admin manual mark creates a log with `status = ABSENT` and zero sessions
 - [ ] Adding a manual session via `POST /api/attendance/admin/sessions` triggers log total recomputation
