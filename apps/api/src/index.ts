@@ -9,6 +9,7 @@ import companiesRouter from "./modules/companies/companies.router";
 import employeesRouter from "./modules/employees/employees.router";
 import departmentsRouter from "./modules/departments/departments.router";
 import shiftsRouter from "./modules/shifts/shifts.router";
+import attendanceRouter from "./modules/attendance/attendance.router";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -29,6 +30,7 @@ app.use("/api/companies", companiesRouter);
 app.use("/api/employees", employeesRouter);
 app.use("/api/departments", departmentsRouter);
 app.use("/api/shifts", shiftsRouter);
+app.use("/api/attendance", attendanceRouter);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);

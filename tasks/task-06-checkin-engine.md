@@ -1,9 +1,11 @@
-# Task 06 — Check-In/Out Engine (Flexible Sessions)
+# Task 06 — Check-In/Out Engine (Flexible Sessions) [Done]
 
 ## Goal
+
 The core feature. Employees can check in and check out multiple times per day (e.g. to accommodate lunch breaks or leaving and returning). Each check-in/out pair is stored as an `AttendanceSession`. The daily `AttendanceLog` accumulates total work minutes across all sessions and computes overtime at the end of each session.
 
 ## Data Model Recap (from Task 02)
+
 ```
 AttendanceLog     → one record per employee per day (daily summary)
 AttendanceSession → one record per check-in/out pair (N per day)
@@ -29,7 +31,9 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 ## Endpoint Specs
 
 ### `POST /api/attendance/check-in`
+
 **Body**:
+
 ```json
 {
   "lat": 31.2001,
@@ -39,10 +43,13 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 ```
 
 **Logic**:
+
 1. Get today's date in the company's timezone (`todayInTimezone(company.timezone)`)
 2. Check for an open session today (`check_out_at = null`) — if one exists, return `409`:
    ```json
-   { "message": "Already checked in. Please check out before checking in again." }
+   {
+     "message": "Already checked in. Please check out before checking in again."
+   }
    ```
 3. Find or create today's `AttendanceLog` for `(user_id, date)`:
    - If creating: set `status = PRESENT`
@@ -55,6 +62,7 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 5. Return the session + updated log
 
 **Response**:
+
 ```json
 {
   "session": {
@@ -77,7 +85,9 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 ---
 
 ### `POST /api/attendance/check-out`
+
 **Body**:
+
 ```json
 {
   "lat": 31.2001,
@@ -86,13 +96,16 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 ```
 
 **Logic**:
+
 1. Find today's open session (`check_out_at = null`) for the user — return `404` if none:
    ```json
    { "message": "No active check-in found. Please check in first." }
    ```
 2. Validate minimum session duration: if `now() - check_in_at < 1 minute`, return `422`:
    ```json
-   { "message": "Session too short. Please wait at least 1 minute before checking out." }
+   {
+     "message": "Session too short. Please wait at least 1 minute before checking out."
+   }
    ```
 3. Compute `duration_minutes = diff(now(), session.check_in_at)` in minutes
 4. Update the session: `check_out_at`, `check_out_lat/lng`, `duration_minutes`
@@ -100,16 +113,20 @@ All routes: `authenticate` (any authenticated user acts on themselves)
    ```typescript
    // Sum duration_minutes of ALL completed sessions for this log
    const completedSessions = await db.attendanceSession.findMany({
-     where: { log_id: log.id, check_out_at: { not: null } }
-   })
-   const total_work_minutes = completedSessions.reduce((sum, s) => sum + s.duration_minutes, 0)
-   const threshold_minutes = company.daily_hours_threshold * 60
-   const overtime_minutes = Math.max(0, total_work_minutes - threshold_minutes)
+     where: { log_id: log.id, check_out_at: { not: null } },
+   });
+   const total_work_minutes = completedSessions.reduce(
+     (sum, s) => sum + s.duration_minutes,
+     0,
+   );
+   const threshold_minutes = company.daily_hours_threshold * 60;
+   const overtime_minutes = Math.max(0, total_work_minutes - threshold_minutes);
    ```
 6. Update `AttendanceLog`: `total_work_minutes`, `overtime_minutes`
 7. Return the closed session + updated log
 
 **Response**:
+
 ```json
 {
   "session": {
@@ -140,9 +157,11 @@ All routes: `authenticate` (any authenticated user acts on themselves)
 ---
 
 ### `GET /api/attendance/today`
+
 Returns today's full picture: the log summary + all sessions.
 
 **Response**:
+
 ```json
 {
   "log": {
@@ -184,9 +203,11 @@ Returns `null` for `log` if no activity today yet.
 ---
 
 ### `GET /api/attendance/status`
+
 Lightweight poll endpoint — used by frontend to decide which button to show.
 
 **Response**:
+
 ```json
 {
   "is_checked_in": true,
@@ -209,36 +230,43 @@ Lightweight poll endpoint — used by frontend to decide which button to show.
 
 ```typescript
 // Today's date in a given timezone (date only, no time)
-export function todayInTimezone(timezone: string): Date
+export function todayInTimezone(timezone: string): Date;
 
 // Format minutes → "Xh Ym"
-export function formatDuration(minutes: number): string
+export function formatDuration(minutes: number): string;
 
 // Is the first check-in of the day late?
-export function isLate(shiftStartTime: string, checkInAt: Date, timezone: string): boolean
+export function isLate(
+  shiftStartTime: string,
+  checkInAt: Date,
+  timezone: string,
+): boolean;
 // shiftStartTime = "09:00", grace period = 15 minutes
 
 // Recompute log totals from all completed sessions
 export async function recomputeLogTotals(
   logId: string,
-  thresholdMinutes: number
-): Promise<{ total_work_minutes: number; overtime_minutes: number }>
+  thresholdMinutes: number,
+): Promise<{ total_work_minutes: number; overtime_minutes: number }>;
 ```
 
 ---
 
 ## Business Rules
+
 - An employee can check in and out **any number of times per day**
 - Only one open session (no `check_out_at`) is allowed at a time — must check out before checking in again
 - `LATE` status is determined only on the **first session** of the day
-- `total_work_minutes` = sum of all completed session durations (open session not counted until closed)
-- `overtime_minutes` = `max(0, total_work_minutes - daily_hours_threshold * 60)`, recalculated on every check-out
+- `total_work_minutes` on the stored `AttendanceLog` = sum of all completed session durations, updated on every check-out
+- **Live totals** (returned by `GET /today` and `GET /status`): `stored total_work_minutes + elapsed minutes of active session` — so the employee always sees real-time progress, even before checking out
+- `overtime_minutes` = `max(0, live_total_work_minutes - daily_hours_threshold * 60)`, recalculated live in read endpoints and persisted on every check-out
 - GPS coordinates are always optional — never block check-in/out due to missing location
 - Employees on approved leave today: check-in is still allowed
 
 ---
 
 ## File Structure
+
 ```
 apps/api/src/modules/attendance/
 ├── attendance.router.ts
@@ -250,6 +278,7 @@ apps/api/src/modules/attendance/
 ---
 
 ## Dependencies
+
 ```bash
 pnpm --filter api add luxon
 pnpm --filter api add -D @types/luxon
@@ -258,6 +287,7 @@ pnpm --filter api add -D @types/luxon
 ---
 
 ## Acceptance Criteria
+
 - [ ] Check-in creates a new `AttendanceSession` and a new `AttendanceLog` (if first session of the day)
 - [ ] Checking in while already checked in (open session) returns `409`
 - [ ] Checking in after checking out creates a second session on the same `AttendanceLog`
