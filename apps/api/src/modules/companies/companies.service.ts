@@ -195,11 +195,10 @@ export async function getCompanyStats(companyId: string) {
   ] = await Promise.all([
     db.user.count({ where: { company_id: companyId } }),
     db.user.count({ where: { company_id: companyId, is_active: true } }),
-    db.attendanceLog.count({
+    db.attendanceSession.count({
       where: {
         company_id: companyId,
-        date: today,
-        check_in_at: { not: null },
+        check_in_at: { gte: today },
         check_out_at: null,
       },
     }),

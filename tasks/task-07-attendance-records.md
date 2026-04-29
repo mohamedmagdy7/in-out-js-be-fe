@@ -96,12 +96,15 @@ Same as above but for a specific employee. Accessible by `HR_ADMIN` and the empl
 ## Admin Override: Mark Attendance
 
 ```
-POST   /api/attendance/admin/mark          → HR_ADMIN marks attendance manually
-PATCH  /api/attendance/admin/:id           → HR_ADMIN edits a log entry
+POST   /api/attendance/admin/mark              → HR_ADMIN marks a day manually (no sessions)
+PATCH  /api/attendance/admin/logs/:id          → HR_ADMIN edits log status/notes
+POST   /api/attendance/admin/sessions          → HR_ADMIN adds a manual session to a log
+PATCH  /api/attendance/admin/sessions/:id      → HR_ADMIN edits a session's times
+DELETE /api/attendance/admin/sessions/:id      → HR_ADMIN removes a session
 ```
 
 ### `POST /api/attendance/admin/mark`
-HR_ADMIN creates or updates an attendance record manually (e.g., for absent employee):
+HR_ADMIN creates a daily log manually with no sessions (e.g. marking ABSENT):
 ```json
 {
   "user_id": "uuid",
@@ -110,18 +113,45 @@ HR_ADMIN creates or updates an attendance record manually (e.g., for absent empl
   "notes": "Employee called in sick"
 }
 ```
+- Creates `AttendanceLog` with `total_work_minutes = 0`, `overtime_minutes = 0`
+- Does not create any sessions
 
-### `PATCH /api/attendance/admin/:id`
-HR_ADMIN edits check-in/out times or status:
+### `PATCH /api/attendance/admin/logs/:id`
+HR_ADMIN updates log-level fields:
 ```json
 {
-  "check_in_at": "2025-03-15T07:00:00Z",
-  "check_out_at": "2025-03-15T15:00:00Z",
-  "status": "PRESENT",
-  "notes": "Corrected after system error"
+  "status": "HALF_DAY",
+  "notes": "Left early due to emergency"
 }
 ```
-- Automatically re-computes `work_minutes` and `overtime_minutes` when times are updated
+
+### `POST /api/attendance/admin/sessions`
+HR_ADMIN adds a manual session to an existing log:
+```json
+{
+  "log_id": "uuid",
+  "check_in_at": "2025-03-15T09:00:00Z",
+  "check_out_at": "2025-03-15T13:00:00Z",
+  "notes": "Added manually — system error"
+}
+```
+- Computes `duration_minutes` from the times
+- Calls `recomputeLogTotals(log_id)` after inserting
+
+### `PATCH /api/attendance/admin/sessions/:id`
+HR_ADMIN edits an existing session's times:
+```json
+{
+  "check_in_at": "2025-03-15T09:00:00Z",
+  "check_out_at": "2025-03-15T17:00:00Z"
+}
+```
+- Recomputes `duration_minutes` from new times
+- Calls `recomputeLogTotals(log_id)` after update
+
+### `DELETE /api/attendance/admin/sessions/:id`
+- Removes the session
+- Calls `recomputeLogTotals(log_id)` after deletion
 
 ---
 
@@ -145,10 +175,11 @@ Add to existing `apps/api/src/modules/attendance/`:
 ---
 
 ## Acceptance Criteria
-- [ ] `GET /api/attendance/my` with `?from=&to=` returns only records in range
+- [ ] `GET /api/attendance/my` with `?from=&to=` returns only records in range, each log includes its sessions array
 - [ ] `GET /api/attendance/team` for a manager returns only their direct reports
 - [ ] Summary `attendance_rate` is computed correctly for a month with known absences
-- [ ] HR Admin manual mark creates a log with `status = ABSENT` and no check-in/out times
-- [ ] Editing a log recalculates `work_minutes` and `overtime_minutes`
+- [ ] HR Admin manual mark creates a log with `status = ABSENT` and zero sessions
+- [ ] Adding a manual session via `POST /api/attendance/admin/sessions` triggers log total recomputation
+- [ ] Editing a session's times via `PATCH` recomputes `total_work_minutes` and `overtime_minutes` on the log
+- [ ] Deleting a session recomputes log totals correctly
 - [ ] A manager cannot access `/api/attendance/company`
-- [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions

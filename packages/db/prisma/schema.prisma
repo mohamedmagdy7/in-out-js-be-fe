@@ -47,8 +47,9 @@ model Company {
   departments    Department[]
   shifts         Shift[]
   leave_types    LeaveType[]
-  attendance_logs AttendanceLog[]
-  leave_requests LeaveRequest[]
+  attendance_logs     AttendanceLog[]
+  attendance_sessions AttendanceSession[]
+  leave_requests      LeaveRequest[]
 }
 
 // ─── User ────────────────────────────────────────────────
@@ -75,10 +76,11 @@ model User {
   shift             Shift?         @relation(fields: [shift_id], references: [id])
   manager           User?          @relation("ManagerEmployee", fields: [manager_id], references: [id])
   managed_employees User[]         @relation("ManagerEmployee")
-  attendance_logs   AttendanceLog[]
-  leave_requests    LeaveRequest[] @relation("UserLeaveRequests")
-  reviewed_leaves   LeaveRequest[] @relation("LeaveReviewer")
-  refresh_tokens    RefreshToken[]
+  attendance_logs     AttendanceLog[]
+  attendance_sessions AttendanceSession[]
+  leave_requests      LeaveRequest[] @relation("UserLeaveRequests")
+  reviewed_leaves     LeaveRequest[] @relation("LeaveReviewer")
+  refresh_tokens      RefreshToken[]
 
   @@unique([email, company_id])
 }
@@ -117,27 +119,45 @@ model Shift {
 // ─── AttendanceLog ───────────────────────────────────────
 
 model AttendanceLog {
-  id               String           @id @default(uuid())
-  company_id       String
+  id                 String           @id @default(uuid())
+  company_id         String
+  user_id            String
+  date               DateTime         @db.Date
+  total_work_minutes Int              @default(0)
+  overtime_minutes   Int              @default(0)
+  status             AttendanceStatus @default(PRESENT)
+  notes              String?
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+
+  company  Company             @relation(fields: [company_id], references: [id])
+  user     User                @relation(fields: [user_id], references: [id])
+  sessions AttendanceSession[]
+
+  @@unique([user_id, date])
+}
+
+// ─── AttendanceSession ───────────────────────────────────
+
+model AttendanceSession {
+  id               String    @id @default(uuid())
+  log_id           String
   user_id          String
-  date             DateTime         @db.Date
-  check_in_at      DateTime?
+  company_id       String
+  check_in_at      DateTime
   check_out_at     DateTime?
   check_in_lat     Float?
   check_in_lng     Float?
   check_out_lat    Float?
   check_out_lng    Float?
-  work_minutes     Int?
-  overtime_minutes Int?
+  duration_minutes Int?
   notes            String?
-  status           AttendanceStatus @default(PRESENT)
-  created_at       DateTime         @default(now())
-  updated_at       DateTime         @updatedAt
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
 
-  company Company @relation(fields: [company_id], references: [id])
-  user    User    @relation(fields: [user_id], references: [id])
-
-  @@unique([user_id, date])
+  log     AttendanceLog @relation(fields: [log_id], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [user_id], references: [id])
+  company Company       @relation(fields: [company_id], references: [id])
 }
 
 // ─── LeaveType ───────────────────────────────────────────

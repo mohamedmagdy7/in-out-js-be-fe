@@ -28,10 +28,25 @@ The employee's personal dashboard. Check in/out with one tap, see today's status
 ### Today's Stats Cards
 ```
 ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐
-│ Check In   │  │ Check Out  │  │ Work Hours │  │ Overtime   │
-│  09:02 AM  │  │  17:35 PM  │  │  8h 33m   │  │  0h 33m   │
+│  Sessions  │  │ Work Hours │  │ Overtime   │  │ Remaining  │
+│     2      │  │  7h 58m   │  │  0h 0m    │  │  0h 02m   │
 └────────────┘  └────────────┘  └────────────┘  └────────────┘
 ```
+- **Sessions**: number of completed check-in/out pairs today
+- **Work Hours**: `total_work_minutes` from the log
+- **Overtime**: `overtime_minutes` from the log
+- **Remaining**: minutes left to hit `daily_hours_threshold` (shows "✓ Done" once met)
+
+### Today's Sessions Timeline
+Below the stats, show a vertical timeline of today's sessions:
+```
+  09:02 AM  ●──────────────●  01:00 PM   3h 58m
+  02:00 PM  ●──────────────●  06:00 PM   4h 00m
+  07:00 PM  ●─────────── (ongoing)
+```
+- Each row: check-in time → check-out time → duration
+- Active session shown with a pulsing dot and "(ongoing)"
+- If no sessions yet: "No activity yet today"
 
 ### Recent Attendance (last 5 days)
 Mini table showing date, in/out times, status badge, hours.
@@ -128,4 +143,3 @@ apps/web/src/components/employee/
 - [ ] Submitting leave with insufficient balance shows a clear error before API call
 - [ ] Cancelling a pending leave request removes it from the list optimistically
 - [ ] Profile update saves and shows success toast
-- [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions
