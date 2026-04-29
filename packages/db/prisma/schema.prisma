@@ -38,6 +38,7 @@ model Company {
   slug                  String   @unique
   timezone              String   @default("UTC")
   daily_hours_threshold Float    @default(8)
+  weekend_days          Int[]   @default([5, 6])
   logo_url              String?
   is_active             Boolean  @default(true)
   created_at            DateTime @default(now())

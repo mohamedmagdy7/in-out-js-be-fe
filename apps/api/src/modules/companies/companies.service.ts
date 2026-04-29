@@ -74,6 +74,7 @@ export async function createCompany(body: CreateCompanyBody) {
       slug: body.slug,
       timezone: body.timezone,
       daily_hours_threshold: body.daily_hours_threshold,
+      weekend_days: body.weekend_days,
     },
   });
 

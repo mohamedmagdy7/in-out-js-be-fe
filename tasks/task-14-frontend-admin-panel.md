@@ -117,7 +117,18 @@ Editable:
 - Company name
 - Timezone selector (dropdown of IANA timezones)
 - Daily hours threshold (number input, in hours)
+- Weekend days (multi-select checkbox group — days of the week)
 - Company logo upload (upload to S3 via `PUT /api/companies/:id`)
+
+### Weekend Days Selector
+Display all 7 days as a checkbox group. Pre-select the company's current `weekend_days`:
+```
+☐ Sunday    ☐ Monday    ☐ Tuesday   ☐ Wednesday
+☐ Thursday  ☑ Friday    ☑ Saturday
+```
+- At least 1 day must remain unchecked (cannot mark all 7 days as weekend)
+- Show a warning if fewer than 2 working days remain: "Warning: employees will have very few working days per week"
+- Common presets as quick-select buttons: "Fri + Sat" | "Sat + Sun" | "Sat only"
 
 ---
 
@@ -157,4 +168,7 @@ apps/web/src/components/admin/
 - [ ] Attendance override updates the row in the table without full page refresh
 - [ ] Leave type deletion blocked when active requests exist
 - [ ] Company timezone change reflected in all time displays across the app
-- [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions
+- [ ] Weekend days selector pre-fills with company's current `weekend_days`
+- [ ] Selecting all 7 days is blocked with an inline validation error
+- [ ] Quick-select preset buttons correctly set the checkboxes
+- [ ] Saving weekend days change calls `PATCH /api/companies/:id` and shows a success toast

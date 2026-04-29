@@ -39,12 +39,13 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 
 **Logic**:
 1. Validate `start_date <= end_date`
-2. Compute `total_days` = number of weekdays (Mon–Fri) in range
-3. Check leave balance: get employee's `days_per_year` for this type, subtract already-approved days this year
-4. If `total_days > remaining_balance`, return `422` with `{ message: "Insufficient leave balance", remaining: N }`
-5. Check for overlapping approved/pending requests in the same date range — return `409` if conflict
-6. Create `LeaveRequest` with `status = PENDING`
-7. Create or update `AttendanceLog` records for each day in range with `status = ON_LEAVE` (only for already-existing logs that haven't been checked in)
+2. Fetch the employee's company to get `company.weekend_days`
+3. Compute `total_days` = number of working days in range using `getWorkingDays(start_date, end_date, company.weekend_days)` — excludes the company's weekend days, not a hardcoded Mon–Fri
+4. Check leave balance: get employee's `days_per_year` for this type, subtract already-approved days this year
+5. If `total_days > remaining_balance`, return `422` with `{ message: "Insufficient leave balance", remaining: N }`
+6. Check for overlapping approved/pending requests in the same date range — return `409` if conflict
+7. Create `LeaveRequest` with `status = PENDING`
+8. Create or update `AttendanceLog` records for each **working day** in range (skip weekend days) with `status = ON_LEAVE` (only for already-existing logs that haven't been checked in)
 
 ### `GET /api/leave/balance`
 ```json
@@ -100,8 +101,10 @@ apps/api/src/modules/leave/
 ├── leave.router.ts
 ├── leave.controller.ts
 ├── leave.service.ts
-└── leave.helpers.ts     → computeWeekdays, checkOverlap, getRemainingBalance
+└── leave.helpers.ts     → computeWorkingDays, checkOverlap, getRemainingBalance
 ```
+
+> `computeWorkingDays` is a thin wrapper around `getWorkingDays` from `attendance.helpers.ts` — import and reuse it, do not reimplement. Always pass `company.weekend_days`.
 
 ---
 
@@ -113,4 +116,3 @@ apps/api/src/modules/leave/
 - [ ] Manager can only approve/reject leave for their direct reports
 - [ ] Cancelled pending request restores the leave balance
 - [ ] `GET /api/leave/balance` correctly subtracts both approved and pending days
-- [ ] Documentation added to `docs/` folder covering what was built, API routes, and key decisions

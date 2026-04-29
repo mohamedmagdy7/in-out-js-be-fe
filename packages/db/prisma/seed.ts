@@ -13,6 +13,8 @@ async function main() {
       name: "Acme Corp",
       slug: "acme",
       timezone: "Africa/Cairo",
+      daily_hours_threshold: 8,
+      weekend_days: [5, 6],
     },
   });
 

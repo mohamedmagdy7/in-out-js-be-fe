@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const weekendDaysSchema = z
+  .array(z.number().int().min(0).max(6))
+  .max(6, "Cannot have more than 6 weekend days")
+  .refine((days) => new Set(days).size === days.length, "Duplicate days not allowed")
+  .default([5, 6]);
+
 export const createCompanySchema = z.object({
   name: z.string().min(1, "Name is required"),
   slug: z
@@ -8,6 +14,7 @@ export const createCompanySchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens only"),
   timezone: z.string().min(1).default("UTC"),
   daily_hours_threshold: z.number().positive().default(8),
+  weekend_days: weekendDaysSchema.optional(),
 });
 
 export const updateCompanySchema = z.object({
@@ -16,6 +23,7 @@ export const updateCompanySchema = z.object({
   daily_hours_threshold: z.number().positive().optional(),
   logo_url: z.string().url().nullable().optional(),
   is_active: z.boolean().optional(),
+  weekend_days: weekendDaysSchema.optional(),
 });
 
 export const inviteAdminSchema = z.object({
