@@ -5,7 +5,12 @@ import {
   checkOverlap,
   getRemainingBalance,
 } from "./leave.helpers";
+import { emailService } from "../../services/email.service";
 import type { CreateLeaveRequestBody, LeaveRequestQuery } from "./leave.schema";
+
+function isoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
 
 export class LeaveError extends Error {
   status: number;
@@ -150,6 +155,41 @@ export async function createLeaveRequest(
       leave_type: { select: { id: true, name: true, is_paid: true } },
     },
   });
+
+  // Notify reviewers (manager + HR admins)
+  const employee = await db.user.findUnique({
+    where: { id: userId },
+    select: { first_name: true, last_name: true, email: true, manager_id: true },
+  });
+
+  if (employee) {
+    const reviewers = await db.user.findMany({
+      where: {
+        company_id: companyId,
+        is_active: true,
+        OR: [
+          { role: "HR_ADMIN" },
+          ...(employee.manager_id ? [{ id: employee.manager_id }] : []),
+        ],
+      },
+      select: { id: true, email: true, first_name: true },
+    });
+
+    if (reviewers.length > 0) {
+      await emailService.sendLeaveSubmitted(
+        { name: company.name },
+        { email: employee.email, first_name: employee.first_name, last_name: employee.last_name },
+        reviewers.map((r) => ({ email: r.email, first_name: r.first_name })),
+        {
+          leave_type_name: leaveType.name,
+          start_date: body.start_date,
+          end_date: body.end_date,
+          total_days: totalDays,
+          reason: body.reason ?? null,
+        },
+      );
+    }
+  }
 
   return request;
 }
@@ -322,6 +362,31 @@ export async function approveRequest(
     });
   }
 
+  // Notify employee
+  const employee = await db.user.findUnique({
+    where: { id: request.user_id },
+    select: { email: true, first_name: true },
+  });
+  const reviewer = await db.user.findUnique({
+    where: { id: reviewerId },
+    select: { first_name: true, last_name: true },
+  });
+  if (employee && reviewer) {
+    await emailService.sendLeaveDecision(
+      { name: company.name },
+      { email: employee.email, first_name: employee.first_name },
+      `${reviewer.first_name} ${reviewer.last_name}`,
+      "APPROVED",
+      {
+        leave_type_name: updated.leave_type.name,
+        start_date: isoDate(request.start_date),
+        end_date: isoDate(request.end_date),
+        total_days: request.total_days,
+        reason: request.reason ?? null,
+      },
+    );
+  }
+
   return updated;
 }
 
@@ -388,6 +453,31 @@ export async function rejectRequest(
       leave_type: { select: { id: true, name: true } },
     },
   });
+
+  // Notify employee
+  const employee = await db.user.findUnique({
+    where: { id: request.user_id },
+    select: { email: true, first_name: true },
+  });
+  const reviewer = await db.user.findUnique({
+    where: { id: reviewerId },
+    select: { first_name: true, last_name: true },
+  });
+  if (employee && reviewer) {
+    await emailService.sendLeaveDecision(
+      { name: company.name },
+      { email: employee.email, first_name: employee.first_name },
+      `${reviewer.first_name} ${reviewer.last_name}`,
+      "REJECTED",
+      {
+        leave_type_name: updated.leave_type.name,
+        start_date: isoDate(request.start_date),
+        end_date: isoDate(request.end_date),
+        total_days: request.total_days,
+        reason,
+      },
+    );
+  }
 
   return updated;
 }

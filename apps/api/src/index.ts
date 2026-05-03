@@ -12,6 +12,7 @@ import shiftsRouter from "./modules/shifts/shifts.router";
 import attendanceRouter from "./modules/attendance/attendance.router";
 import leaveRouter from "./modules/leave/leave.router";
 import reportsRouter from "./modules/reports/reports.router";
+import { startMissedCheckoutJobs } from "./jobs/missed-checkout.job";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -38,4 +39,7 @@ app.use("/api/reports", reportsRouter);
 
 app.listen(PORT, () => {
   console.log(`API server running on http://localhost:${PORT}`);
+  startMissedCheckoutJobs().catch((err) =>
+    console.error("Failed to start missed-checkout cron:", err),
+  );
 });

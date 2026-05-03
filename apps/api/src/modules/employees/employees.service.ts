@@ -1,5 +1,6 @@
 import { db } from "@repo/db";
 import { hashPassword } from "@repo/shared";
+import { emailService } from "../../services/email.service";
 import type { CreateEmployeeBody, UpdateEmployeeBody } from "./employees.schema";
 
 export class EmployeeError extends Error {
@@ -131,6 +132,18 @@ export async function createEmployee(companyId: string, body: CreateEmployeeBody
     select: employeeSelect,
   });
 
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { name: true },
+  });
+  if (company) {
+    await emailService.sendWelcome(
+      { name: company.name },
+      { email: employee.email, first_name: employee.first_name },
+      body.password,
+    );
+  }
+
   return employee;
 }
 
@@ -240,6 +253,18 @@ export async function resetEmployeePassword(companyId: string, employeeId: strin
       where: { user_id: employeeId },
     }),
   ]);
+
+  const company = await db.company.findUnique({
+    where: { id: companyId },
+    select: { name: true },
+  });
+  if (company) {
+    await emailService.sendPasswordReset(
+      { name: company.name },
+      { email: employee.email, first_name: employee.first_name },
+      newPassword,
+    );
+  }
 
   return { message: "Password reset successfully" };
 }
