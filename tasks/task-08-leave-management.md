@@ -1,11 +1,13 @@
-# Task 08 — Leave Management
+# Task 08 — Leave Management [Done]
 
 ## Goal
+
 Employees request leave. Managers or HR Admins approve/reject. Track leave balances per employee per year.
 
 ## Endpoints
 
 ### Employee-facing
+
 ```
 GET    /api/leave/types                  → list available leave types for company
 GET    /api/leave/balance                → my leave balance for current year
@@ -15,6 +17,7 @@ DELETE /api/leave/requests/:id           → cancel pending request
 ```
 
 ### Manager / HR Admin
+
 ```
 GET    /api/leave/requests/pending       → pending requests to review (own team for MANAGER, all for HR_ADMIN)
 PATCH  /api/leave/requests/:id/approve   → approve request
@@ -27,7 +30,9 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 ## Endpoint Specs
 
 ### `POST /api/leave/requests`
+
 **Body**:
+
 ```json
 {
   "leave_type_id": "uuid",
@@ -38,6 +43,7 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 ```
 
 **Logic**:
+
 1. Validate `start_date <= end_date`
 2. Fetch the employee's company to get `company.weekend_days`
 3. Compute `total_days` = number of working days in range using `getWorkingDays(start_date, end_date, company.weekend_days)` — excludes the company's weekend days, not a hardcoded Mon–Fri
@@ -48,6 +54,7 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 8. Create or update `AttendanceLog` records for each **working day** in range (skip weekend days) with `status = ON_LEAVE` (only for already-existing logs that haven't been checked in)
 
 ### `GET /api/leave/balance`
+
 ```json
 {
   "year": 2025,
@@ -64,16 +71,20 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 ```
 
 ### `PATCH /api/leave/requests/:id/approve`
+
 - `HR_ADMIN` or `MANAGER` (only for their direct report)
 - Sets `status = APPROVED`, `reviewed_by = req.user.id`, `reviewed_at = now()`
 - Updates `AttendanceLog` for each day in range to `status = ON_LEAVE`
 
 ### `PATCH /api/leave/requests/:id/reject`
+
 **Body**: `{ reason: "Project deadline" }`
+
 - Sets `status = REJECTED`
 - Reverts any `AttendanceLog` entries that were set to `ON_LEAVE` back to their original status
 
 ### `DELETE /api/leave/requests/:id`
+
 - Employee can only cancel `PENDING` requests
 - Cannot cancel `APPROVED` request (must ask HR Admin)
 - HR Admin can cancel any non-rejected request
@@ -81,11 +92,12 @@ GET    /api/leave/requests/all           → all requests with filters (HR_ADMIN
 ---
 
 ## Leave Balance Calculation
+
 ```typescript
 function getRemainingBalance(
   userId: string,
   leaveTypeId: string,
-  year: number
+  year: number,
 ): Promise<number> {
   // 1. Get leave_type.days_per_year
   // 2. Sum total_days of APPROVED requests for this user+type in given year
@@ -96,6 +108,7 @@ function getRemainingBalance(
 ---
 
 ## File Structure
+
 ```
 apps/api/src/modules/leave/
 ├── leave.router.ts
@@ -109,6 +122,7 @@ apps/api/src/modules/leave/
 ---
 
 ## Acceptance Criteria
+
 - [ ] Requesting 5 days when only 3 remain returns `422` with remaining balance
 - [ ] Overlapping leave request returns `409`
 - [ ] Approving a request marks attendance logs for those days as `ON_LEAVE`
