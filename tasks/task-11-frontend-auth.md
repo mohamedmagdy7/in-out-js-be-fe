@@ -1,6 +1,7 @@
-# Task 11 — Frontend: Auth & Role-Based Routing
+# Task 11 — Frontend: Auth & Role-Based Routing [Done]
 
 ## Goal
+
 Build the authentication UI in Next.js 14 (App Router). Login page, session management, and role-based route guards. This is the foundation all other frontend tasks build on.
 
 ## Pages & Routes
@@ -34,6 +35,7 @@ Build the authentication UI in Next.js 14 (App Router). Login page, session mana
 ## What to Build
 
 ### `apps/web/src/lib/auth/`
+
 ```
 auth-store.ts          → Zustand store: { user, accessToken, setAuth, clearAuth }
 auth-provider.tsx      → Context provider that runs session restore on mount
@@ -41,6 +43,7 @@ api-client.ts          → Axios instance with interceptors (auto-attach token, 
 ```
 
 ### Login Page (`app/login/page.tsx`)
+
 - Fields: Email, Password, Company Slug (shown only when not super_admin — add a toggle "Sign in as Super Admin")
 - Validation with `react-hook-form` + `zod`
 - Show loading state during login
@@ -48,7 +51,9 @@ api-client.ts          → Axios instance with interceptors (auto-attach token, 
 - Redirect to role dashboard on success
 
 ### Route Guards (`middleware.ts` at app root)
+
 Use Next.js `middleware.ts` to:
+
 - Redirect unauthenticated users to `/login`
 - Redirect authenticated users away from `/login`
 - Enforce role access: `EMPLOYEE` cannot access `/admin`, etc.
@@ -56,6 +61,7 @@ Use Next.js `middleware.ts` to:
 Since access tokens are in memory (not cookies), use a `session` cookie (set by the API's refresh token flow) to detect if user is likely authenticated in middleware, then let client-side handle the actual token.
 
 ### `components/auth/`
+
 ```
 LoginForm.tsx
 AuthGuard.tsx           → client component that checks auth before rendering children
@@ -65,22 +71,24 @@ RoleGuard.tsx           → wraps a page and redirects if role doesn't match
 ---
 
 ## Zustand Store Shape
+
 ```typescript
 type AuthStore = {
-  user: AuthUser | null
-  accessToken: string | null
-  isLoading: boolean
-  setAuth: (user: AuthUser, token: string) => void
-  clearAuth: () => void
-}
+  user: AuthUser | null;
+  accessToken: string | null;
+  isLoading: boolean;
+  setAuth: (user: AuthUser, token: string) => void;
+  clearAuth: () => void;
+};
 ```
 
 ---
 
 ## API Client (`lib/api-client.ts`)
+
 ```typescript
 // Axios instance
-const apiClient = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL })
+const apiClient = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL });
 
 // Request interceptor: attach Bearer token
 // Response interceptor:
@@ -91,6 +99,7 @@ const apiClient = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL })
 ---
 
 ## Design Notes
+
 - Clean, professional login page — company logo placeholder at top
 - Show/hide password toggle
 - "Remember me" checkbox (extends refresh token to 30d — backend already supports this via cookie)
@@ -99,6 +108,7 @@ const apiClient = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL })
 ---
 
 ## Acceptance Criteria
+
 - [ ] Login with wrong credentials shows inline error message
 - [ ] Login with valid credentials redirects to correct role dashboard
 - [ ] Page refresh restores session via refresh token cookie
