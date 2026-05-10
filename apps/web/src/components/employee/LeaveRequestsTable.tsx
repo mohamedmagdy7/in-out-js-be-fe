@@ -101,7 +101,7 @@ export function LeaveRequestsTable({ data, isLoading }: Props) {
                   </td>
                   <td className="px-5 py-3 tabular-nums">{r.total_days}</td>
                   <td className="px-5 py-3">
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col items-start gap-1">
                       <LeaveBadge status={r.status} />
                       {rejected && r.reason ? (
                         <span className="text-[11px] text-foreground-subtle">

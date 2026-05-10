@@ -498,7 +498,16 @@ export async function getTeamAttendance(managerId: string, companyId: string, qu
     return { data: [], pagination: { page: query.page, limit: query.limit, total: 0 } };
   }
 
-  const where: any = { user_id: { in: teamIds }, company_id: companyId };
+  // Narrow to a single direct report when employee_id is provided. Reject if the
+  // requested id isn't in the manager's team to avoid leaking other employees.
+  if (query.employee_id && !teamIds.includes(query.employee_id)) {
+    throw new AttendanceError("Employee is not in your team", 403);
+  }
+
+  const where: any = {
+    user_id: query.employee_id ?? { in: teamIds },
+    company_id: companyId,
+  };
 
   if (query.from || query.to) {
     where.date = {};
@@ -506,6 +515,9 @@ export async function getTeamAttendance(managerId: string, companyId: string, qu
     if (query.to) where.date.lte = new Date(`${query.to}T00:00:00.000Z`);
   }
   if (query.status) where.status = query.status;
+  if (query.department_id) {
+    where.user = { department_id: query.department_id };
+  }
 
   const [logs, total] = await Promise.all([
     db.attendanceLog.findMany({

@@ -116,6 +116,102 @@ export type LeaveRequestsResponse = {
   pagination: Pagination;
 };
 
+// ─── Manager / team ──────────────────────────────────────
+
+export type TeamMember = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  phone: string | null;
+  is_active: boolean;
+  created_at: string;
+  department: { id: string; name: string } | null;
+  shift: {
+    id: string;
+    name: string;
+    start_time: string;
+    end_time: string;
+  } | null;
+  manager: { id: string; first_name: string; last_name: string } | null;
+};
+
+export type TeamMembersResponse = {
+  data: TeamMember[];
+  pagination: Pagination & { total_pages: number };
+};
+
+export type TeamAttendanceLog = AttendanceLog & {
+  user: {
+    id: string;
+    full_name: string;
+    department: string | null;
+  };
+};
+
+export type TeamAttendanceResponse = {
+  data: TeamAttendanceLog[];
+  pagination: Pagination;
+};
+
+export type LeaveRequestForReviewer = LeaveRequest & {
+  user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    department: { name: string } | null;
+  };
+};
+
+export type LeaveRequestsForReviewerResponse = {
+  data: LeaveRequestForReviewer[];
+  pagination: Pagination;
+};
+
+export type ReportsSummary = {
+  today: {
+    checked_in: number;
+    not_checked_in: number;
+    on_leave: number;
+    late: number;
+    total_live_work_minutes: number;
+  };
+  this_month: {
+    avg_attendance_rate: string;
+    total_overtime_hours: string;
+    pending_leave_requests: number;
+  };
+};
+
+export type AttendanceReportRow = {
+  user: {
+    id: string;
+    full_name: string;
+    department: string | null;
+  };
+  days_present: number;
+  days_absent: number;
+  days_late: number;
+  days_on_leave: number;
+  total_work_minutes: number;
+  total_overtime_minutes: number;
+  attendance_rate: string;
+  has_active_session: boolean;
+};
+
+export type AttendanceReportResponse = {
+  period: { from: string; to: string };
+  includes_live_data: boolean;
+  summary: {
+    total_employees: number;
+    avg_attendance_rate: string;
+    total_work_hours: string;
+    total_overtime_hours: string;
+  };
+  employees: AttendanceReportRow[];
+};
+
 export type Profile = {
   id: string;
   email: string;

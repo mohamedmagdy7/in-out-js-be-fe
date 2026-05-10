@@ -1,4 +1,4 @@
-# Task 13 — Frontend: Manager Dashboard
+# Task 13 — Frontend: Manager Dashboard [Done]
 
 ## Goal
 

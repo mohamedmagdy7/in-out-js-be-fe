@@ -127,7 +127,7 @@ Drop-in icon toggle. Lives in headers (login page top-right, role shell header).
 
 ### `RoleShell` (`components/auth/RoleShell.tsx`)
 
-The standard authenticated-page chrome. Sticky header with brand mark, user avatar (initials in primary-soft circle), email, role badge, theme toggle, and sign-out button. Below the header it renders a page title + optional subtitle and a content area that fades in.
+The minimal authenticated-page chrome. Sticky header with brand mark, user avatar (initials in primary-soft circle), email, role badge, theme toggle, and sign-out button. Below the header it renders a page title + optional subtitle and a content area that fades in. Used for single-page roles (currently `super_admin`, `hr_admin` placeholders).
 
 ```tsx
 <RoleShell title="Team overview" subtitle="Live status, attendance, and team reports.">
@@ -135,15 +135,20 @@ The standard authenticated-page chrome. Sticky header with brand mark, user avat
 </RoleShell>
 ```
 
-Always wrap a role page like this:
+### Tabbed role shells: `EmployeeShell` and `ManagerShell`
+
+For roles with multiple sub-routes, the shells in `components/employee/EmployeeShell.tsx` and `components/manager/ManagerShell.tsx` use the same sticky header but add a secondary tab bar that highlights the active route via a 0.5px primary underline. The page itself owns its title + subtitle (no `title` prop on the shell). The pattern:
 
 ```tsx
+// app/<role>/layout.tsx
 <AuthGuard>
-  <RoleGuard roles={["manager"]}>
-    <RoleShell title="…">…</RoleShell>
+  <RoleGuard roles={["<role>"]}>
+    <RoleShellVariant>{children}</RoleShellVariant>
   </RoleGuard>
 </AuthGuard>
 ```
+
+When you add a new multi-page role, copy `ManagerShell.tsx`, swap the `NAV` array, and adjust the role label. The header markup stays identical so all role chromes feel like the same product.
 
 ### Auth backdrop (login page)
 
@@ -181,8 +186,10 @@ apps/web/src/
 │       ├── theme-script.tsx          ← inline pre-hydration theme bootstrapper
 │       └── use-theme.ts              ← React hook for theme state
 └── components/
-    ├── ui/                           ← primitives (Button, Input, Card, Alert, …)
-    └── auth/                         ← AuthGuard, RoleGuard, RoleShell, LoginForm, LogoutButton
+    ├── ui/                           ← primitives (Button, Input, Card, Alert, Modal, Select, Textarea, ProgressBar, Spinner, StatusBadge, Toaster, …)
+    ├── auth/                         ← AuthGuard, RoleGuard, RoleShell, LoginForm, LogoutButton
+    ├── employee/                     ← EmployeeShell + employee-only widgets (Task 12)
+    └── manager/                      ← ManagerShell + manager-only widgets (Task 13)
 tailwind.config.ts                    ← maps CSS variables onto Tailwind tokens
 ```
 

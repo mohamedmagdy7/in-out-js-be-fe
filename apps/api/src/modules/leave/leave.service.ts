@@ -262,7 +262,7 @@ export async function getPendingRequests(
 ) {
   const where: any = {
     company_id: companyId,
-    status: "PENDING",
+    status: query.status ?? "PENDING",
   };
 
   // Manager can only see their direct reports
@@ -274,14 +274,19 @@ export async function getPendingRequests(
     where.user_id = { in: directReports.map((u) => u.id) };
   }
 
+  const orderBy = where.status === "PENDING"
+    ? ({ created_at: "asc" } as const)
+    : ({ reviewed_at: "desc" } as const);
+
   const [requests, total] = await Promise.all([
     db.leaveRequest.findMany({
       where,
       include: {
         user: { select: { id: true, first_name: true, last_name: true, department: { select: { name: true } } } },
         leave_type: { select: { id: true, name: true, is_paid: true } },
+        reviewer: { select: { id: true, first_name: true, last_name: true } },
       },
-      orderBy: { created_at: "asc" },
+      orderBy,
       skip: (query.page - 1) * query.limit,
       take: query.limit,
     }),
