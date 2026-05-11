@@ -60,7 +60,8 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
           {NAV.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/superadmin" && pathname.startsWith(item.href));
+              (item.href !== "/superadmin" &&
+                pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             return (
               <Link

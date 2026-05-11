@@ -68,7 +68,8 @@ export function ManagerShell({ children }: { children: React.ReactNode }) {
           {NAV.map((item) => {
             const isActive =
               pathname === item.href ||
-              (item.href !== "/manager" && pathname.startsWith(item.href));
+              (item.href !== "/manager" &&
+                pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             return (
               <Link
