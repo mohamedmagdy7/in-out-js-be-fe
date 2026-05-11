@@ -24,12 +24,14 @@ packages/
 
 ## User Roles
 
-| Role          | Scope                                                  |
-| ------------- | ------------------------------------------------------ |
-| `super_admin` | Manages companies (SaaS level)                         |
-| `hr_admin`    | Manages employees, settings, reports for their company |
-| `manager`     | Views & exports their team's attendance                |
-| `employee`    | Check in/out, view own records, request leave          |
+| Role          | Scope                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| `super_admin` | Manages companies (SaaS level)                                                                 |
+| `hr_admin`    | Manages employees, settings, reports for their company. Can also check in/out and request leave |
+| `manager`     | Views & exports their team's attendance. Can also check in/out and request leave                |
+| `employee`    | Check in/out, view own records, request leave                                                  |
+
+Any user with a `company_id` (`hr_admin`, `manager`, `employee`) is a working staff member and can check in/out — they show up in attendance reports the same way. `super_admin` is platform-level and has no company context.
 
 ## Multi-Tenancy
 

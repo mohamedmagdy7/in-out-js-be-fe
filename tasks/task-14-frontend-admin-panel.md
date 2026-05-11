@@ -1,6 +1,7 @@
-# Task 14 — Frontend: HR Admin Panel
+# Task 14 — Frontend: HR Admin Panel [Done]
 
 ## Goal
+
 Full company management for HR Admins. Manage employees, departments, shifts, leave types, company-wide attendance, and reports.
 
 ## Pages
@@ -24,6 +25,7 @@ Full company management for HR Admins. Manage employees, departments, shifts, le
 ## Admin Overview (`/admin`)
 
 ### KPI Cards Row
+
 ```
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
 │ Total Staff  │ │ Present Today│ │ On Leave     │ │ Pending Leave│
@@ -32,10 +34,12 @@ Full company management for HR Admins. Manage employees, departments, shifts, le
 ```
 
 ### Live Check-In Feed
+
 Most recent check-ins today, auto-refreshing every 2 minutes.
 `"John Doe checked in at 09:02 AM — Engineering"`
 
 ### Pending Leave Requests Alert
+
 If pending requests > 0, show a prominent card with quick approve/reject actions.
 
 ---
@@ -43,14 +47,18 @@ If pending requests > 0, show a prominent card with quick approve/reject actions
 ## Employee Management (`/admin/employees`)
 
 ### Employee Table
+
 Columns: Avatar | Name | Email | Department | Shift | Role | Status | Actions
+
 - Search bar (name, email)
 - Filters: Department, Role, Status (active/inactive)
 - "Add Employee" button → `/admin/employees/new`
 - Actions per row: Edit, Deactivate, Reset Password
 
 ### Create/Edit Employee Form
+
 Fields:
+
 - First Name, Last Name
 - Email (required, validated)
 - Password (required for create, hidden for edit)
@@ -61,7 +69,9 @@ Fields:
 - Phone (optional)
 
 ### Employee Detail Page (`/admin/employees/:id`)
+
 Tabs:
+
 - **Profile**: all employee info (editable)
 - **Attendance**: their attendance history table + monthly summary
 - **Leave**: their leave balance + request history
@@ -70,17 +80,20 @@ Tabs:
 ---
 
 ## Departments (`/admin/departments`)
+
 - Table: Name | Employee Count | Actions (Rename, Delete)
 - Inline rename (click to edit)
 - Delete blocked if employees are assigned (show count)
 - "Add Department" → inline form or modal
 
 ## Shifts (`/admin/shifts`)
+
 - Table: Name | Start Time | End Time | Assigned Employees | Default | Actions
 - Create/edit modal with time pickers
 - Toggle default shift
 
 ## Leave Types (`/admin/leave-types`)
+
 - Table: Name | Days/Year | Paid? | Actions
 - Create/edit modal
 - Cannot delete if employees have requests for this type
@@ -88,7 +101,9 @@ Tabs:
 ---
 
 ## Attendance (`/admin/attendance`)
+
 Same as manager view but company-wide:
+
 - All employees, all departments
 - Admin override: click a row to edit check-in/out times or status
 - Manual mark: button to add absent/present record for any employee for any date
@@ -96,6 +111,7 @@ Same as manager view but company-wide:
 ---
 
 ## Leave Requests (`/admin/leave`)
+
 - Tabs: Pending | All
 - Filter by employee, type, date range, status
 - Approve/reject with reason
@@ -104,7 +120,9 @@ Same as manager view but company-wide:
 ---
 
 ## Reports (`/admin/reports`)
+
 Full company reporting — same as manager but with all employees:
+
 - Attendance report with department grouping option
 - Overtime report (top overtime earners)
 - Leave usage report (leave balance overview)
@@ -113,7 +131,9 @@ Full company reporting — same as manager but with all employees:
 ---
 
 ## Company Settings (`/admin/settings`)
+
 Editable:
+
 - Company name
 - Timezone selector (dropdown of IANA timezones)
 - Daily hours threshold (number input, in hours)
@@ -121,11 +141,14 @@ Editable:
 - Company logo upload (upload to S3 via `PUT /api/companies/:id`)
 
 ### Weekend Days Selector
+
 Display all 7 days as a checkbox group. Pre-select the company's current `weekend_days`:
+
 ```
 ☐ Sunday    ☐ Monday    ☐ Tuesday   ☐ Wednesday
 ☐ Thursday  ☑ Friday    ☑ Saturday
 ```
+
 - At least 1 day must remain unchecked (cannot mark all 7 days as weekend)
 - Show a warning if fewer than 2 working days remain: "Warning: employees will have very few working days per week"
 - Common presets as quick-select buttons: "Fri + Sat" | "Sat + Sun" | "Sat only"
@@ -133,6 +156,7 @@ Display all 7 days as a checkbox group. Pre-select the company's current `weeken
 ---
 
 ## Component Structure
+
 ```
 apps/web/src/app/(admin)/
 ├── admin/
@@ -162,6 +186,7 @@ apps/web/src/components/admin/
 ---
 
 ## Acceptance Criteria
+
 - [ ] Creating an employee shows them in the table immediately (optimistic or refetch)
 - [ ] Resetting password from employee detail sends the welcome/reset email
 - [ ] Deactivating an employee marks them inactive and they can no longer log in

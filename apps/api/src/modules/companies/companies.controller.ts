@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
+import type { AuthenticatedRequest } from "../../middleware/authenticate";
 import * as companiesService from "./companies.service";
 import { CompanyError } from "./companies.service";
-import type { CreateCompanyBody, UpdateCompanyBody, InviteAdminBody } from "./companies.schema";
+import type {
+  CreateCompanyBody,
+  UpdateCompanyBody,
+  InviteAdminBody,
+  UpdateMyCompanyBody,
+} from "./companies.schema";
 
 function handleError(err: unknown, res: Response) {
   if (err instanceof CompanyError) {
@@ -68,6 +74,40 @@ export async function inviteAdminHandler(req: Request, res: Response) {
 export async function statsHandler(req: Request, res: Response) {
   try {
     const stats = await companiesService.getCompanyStats(req.params.id);
+    return res.json(stats);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+// HR_ADMIN: their own company
+export async function getMyCompanyHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    const company = await companiesService.getCompany(company_id!);
+    return res.json(company);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function updateMyCompanyHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    const company = await companiesService.updateCompany(
+      company_id!,
+      req.body as UpdateMyCompanyBody,
+    );
+    return res.json(company);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function getMyCompanyStatsHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    const stats = await companiesService.getCompanyStats(company_id!);
     return res.json(stats);
   } catch (err) {
     return handleError(err, res);

@@ -212,6 +212,56 @@ export type AttendanceReportResponse = {
   employees: AttendanceReportRow[];
 };
 
+// ─── Admin (HR) ──────────────────────────────────────────
+
+export type Department = {
+  id: string;
+  name: string;
+  created_at: string;
+  _count?: { users: number };
+};
+
+export type Shift = {
+  id: string;
+  name: string;
+  start_time: string;
+  end_time: string;
+  is_default: boolean;
+  created_at: string;
+  _count?: { users: number };
+};
+
+export type LeaveTypeFull = {
+  id: string;
+  name: string;
+  days_per_year: number;
+  is_paid: boolean;
+  created_at: string;
+  _count?: { leave_requests: number };
+};
+
+export type CompanyConfig = {
+  id: string;
+  name: string;
+  slug: string;
+  timezone: string;
+  daily_hours_threshold: number;
+  weekend_days: number[];
+  logo_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  employee_count?: number;
+};
+
+export type CompanyStats = {
+  total_employees: number;
+  active_employees: number;
+  checked_in_today: number;
+  on_leave_today: number;
+  departments_count: number;
+};
+
 export type Profile = {
   id: string;
   email: string;

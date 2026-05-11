@@ -135,9 +135,9 @@ The minimal authenticated-page chrome. Sticky header with brand mark, user avata
 </RoleShell>
 ```
 
-### Tabbed role shells: `EmployeeShell` and `ManagerShell`
+### Tabbed role shells: `EmployeeShell`, `ManagerShell`, `AdminShell`
 
-For roles with multiple sub-routes, the shells in `components/employee/EmployeeShell.tsx` and `components/manager/ManagerShell.tsx` use the same sticky header but add a secondary tab bar that highlights the active route via a 0.5px primary underline. The page itself owns its title + subtitle (no `title` prop on the shell). The pattern:
+For roles with multiple sub-routes, the shells in `components/employee/EmployeeShell.tsx`, `components/manager/ManagerShell.tsx`, and `components/admin/AdminShell.tsx` use the same sticky header but add a secondary tab bar that highlights the active route via a 0.5px primary underline. The page itself owns its title + subtitle (no `title` prop on the shell). The pattern:
 
 ```tsx
 // app/<role>/layout.tsx
@@ -148,7 +148,7 @@ For roles with multiple sub-routes, the shells in `components/employee/EmployeeS
 </AuthGuard>
 ```
 
-When you add a new multi-page role, copy `ManagerShell.tsx`, swap the `NAV` array, and adjust the role label. The header markup stays identical so all role chromes feel like the same product.
+When you add a new multi-page role, copy one of the existing shells (e.g. `AdminShell.tsx`), swap the `NAV` array, and adjust the role label. The header markup stays identical so all role chromes feel like the same product. `AdminShell` carries 9 entries and uses `overflow-x-auto` on the nav so the bar still scrolls cleanly on narrower viewports — keep that property whenever you grow a nav past ~5 items.
 
 ### Auth backdrop (login page)
 
@@ -160,9 +160,14 @@ Centered card on `bg-background` with the dot-grid utility (`grid-bg`) and a sof
 |---|---|---|
 | Authed page | Any role-restricted route | `AuthGuard` → `RoleGuard` → `RoleShell` → cards |
 | Public page | Login, future password reset | Centered max-w-md card on grid-bg backdrop |
-| Empty state | No data yet | `Card` with `surface-muted` rounded panel inside `CardBody` (already used in placeholders) |
+| Empty state | No data yet | `rounded-lg border border-dashed border-border bg-surface px-6 py-10 text-center text-sm text-foreground-muted` (used in tables, lists, tabs) |
 | Inline form errors | Field-level | `<FieldError>` under the input |
 | Form-level errors | API failures, business-rule blocks | `<Alert tone="danger">` at top of form |
+| KPI card | Dashboard summary tiles | `components/admin/KpiCard.tsx` — label, value, optional icon + tone, optional hint |
+| Filter bar | Tables with multiple filters | `grid gap-3 rounded-lg border border-border bg-surface p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4` |
+| Tabbed page section | Sub-views within one route | Pill toggle: `inline-flex w-fit rounded-md border border-border bg-surface p-0.5`, active pill `bg-primary text-primary-foreground shadow-sm` |
+| CRUD table | Departments, shifts, leave types | `<table>` inside `rounded-lg border border-border bg-surface shadow-sm`; row actions as `IconButton` group on the right (`Pencil`, `Trash2`); inline rename via swapping the name cell for an `Input` plus check/cancel `IconButton`s |
+| Confirm + form modal | Create, edit, delete, override | `Modal` from `components/ui/Modal.tsx` with `footer` holding the action row; destructive actions use `variant="danger"` |
 
 ## Conventions
 
@@ -189,7 +194,8 @@ apps/web/src/
     ├── ui/                           ← primitives (Button, Input, Card, Alert, Modal, Select, Textarea, ProgressBar, Spinner, StatusBadge, Toaster, …)
     ├── auth/                         ← AuthGuard, RoleGuard, RoleShell, LoginForm, LogoutButton
     ├── employee/                     ← EmployeeShell + employee-only widgets (Task 12)
-    └── manager/                      ← ManagerShell + manager-only widgets (Task 13)
+    ├── manager/                      ← ManagerShell + manager-only widgets (Task 13)
+    └── admin/                        ← AdminShell, KpiCard, LiveCheckInFeed, EmployeeTable, EmployeeForm, AttendanceOverrideModal, ManualMarkModal, WeekendDaysField (Task 14)
 tailwind.config.ts                    ← maps CSS variables onto Tailwind tokens
 ```
 

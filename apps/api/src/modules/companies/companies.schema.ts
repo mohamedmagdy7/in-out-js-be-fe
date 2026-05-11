@@ -33,6 +33,16 @@ export const inviteAdminSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+// Settings HR_ADMIN can manage for their own company.
+export const updateMyCompanySchema = z.object({
+  name: z.string().min(1).optional(),
+  timezone: z.string().min(1).optional(),
+  daily_hours_threshold: z.coerce.number().positive().optional(),
+  weekend_days: weekendDaysSchema.optional(),
+  logo_url: z.string().url().nullable().optional(),
+});
+
 export type CreateCompanyBody = z.infer<typeof createCompanySchema>;
 export type UpdateCompanyBody = z.infer<typeof updateCompanySchema>;
 export type InviteAdminBody = z.infer<typeof inviteAdminSchema>;
+export type UpdateMyCompanyBody = z.infer<typeof updateMyCompanySchema>;

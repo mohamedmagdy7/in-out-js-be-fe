@@ -1,8 +1,13 @@
 import { Router, type IRouter } from "express";
 import { authenticate } from "../../middleware/authenticate";
-import { authorize } from "../../middleware/authorize";
+import { authorize, requireCompany } from "../../middleware/authorize";
 import { validate } from "../../middleware/validate";
-import { createCompanySchema, updateCompanySchema, inviteAdminSchema } from "./companies.schema";
+import {
+  createCompanySchema,
+  updateCompanySchema,
+  inviteAdminSchema,
+  updateMyCompanySchema,
+} from "./companies.schema";
 import {
   listHandler,
   createHandler,
@@ -11,11 +16,38 @@ import {
   deleteHandler,
   inviteAdminHandler,
   statsHandler,
+  getMyCompanyHandler,
+  updateMyCompanyHandler,
+  getMyCompanyStatsHandler,
 } from "./companies.controller";
 
 const router: IRouter = Router();
 
-// All routes require SUPER_ADMIN
+// HR_ADMIN routes for their own company. Must come before the SUPER_ADMIN guard.
+router.get(
+  "/me",
+  authenticate,
+  requireCompany,
+  authorize("HR_ADMIN"),
+  getMyCompanyHandler,
+);
+router.patch(
+  "/me",
+  authenticate,
+  requireCompany,
+  authorize("HR_ADMIN"),
+  validate(updateMyCompanySchema),
+  updateMyCompanyHandler,
+);
+router.get(
+  "/me/stats",
+  authenticate,
+  requireCompany,
+  authorize("HR_ADMIN"),
+  getMyCompanyStatsHandler,
+);
+
+// All routes below require SUPER_ADMIN
 router.use(authenticate, authorize("SUPER_ADMIN"));
 
 router.get("/", listHandler);

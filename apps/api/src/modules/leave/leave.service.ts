@@ -35,7 +35,74 @@ export async function getLeaveTypes(companyId: string) {
   return db.leaveType.findMany({
     where: { company_id: companyId },
     orderBy: { name: "asc" },
+    include: {
+      _count: { select: { leave_requests: true } },
+    },
   });
+}
+
+export async function createLeaveType(
+  companyId: string,
+  body: { name: string; days_per_year: number; is_paid: boolean },
+) {
+  const existing = await db.leaveType.findUnique({
+    where: { company_id_name: { company_id: companyId, name: body.name } },
+  });
+  if (existing) {
+    throw new LeaveError("Leave type with this name already exists", 409);
+  }
+  return db.leaveType.create({
+    data: {
+      company_id: companyId,
+      name: body.name,
+      days_per_year: body.days_per_year,
+      is_paid: body.is_paid,
+    },
+  });
+}
+
+export async function updateLeaveType(
+  companyId: string,
+  id: string,
+  body: { name?: string; days_per_year?: number; is_paid?: boolean },
+) {
+  const leaveType = await db.leaveType.findFirst({
+    where: { id, company_id: companyId },
+  });
+  if (!leaveType) {
+    throw new LeaveError("Leave type not found", 404);
+  }
+  if (body.name && body.name !== leaveType.name) {
+    const dup = await db.leaveType.findUnique({
+      where: { company_id_name: { company_id: companyId, name: body.name } },
+    });
+    if (dup) {
+      throw new LeaveError("Leave type with this name already exists", 409);
+    }
+  }
+  return db.leaveType.update({
+    where: { id },
+    data: body,
+  });
+}
+
+export async function deleteLeaveType(companyId: string, id: string) {
+  const leaveType = await db.leaveType.findFirst({
+    where: { id, company_id: companyId },
+  });
+  if (!leaveType) {
+    throw new LeaveError("Leave type not found", 404);
+  }
+  const inUse = await db.leaveRequest.count({
+    where: { leave_type_id: id, company_id: companyId },
+  });
+  if (inUse > 0) {
+    throw new LeaveError(
+      "Cannot delete a leave type that has existing requests",
+      409,
+    );
+  }
+  return db.leaveType.delete({ where: { id } });
 }
 
 // ─── Leave Balance ───────────────────────────────────────

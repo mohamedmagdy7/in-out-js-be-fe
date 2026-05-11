@@ -6,6 +6,8 @@ import { LeaveError } from "./leave.service";
 import {
   type CreateLeaveRequestBody,
   type RejectLeaveRequestBody,
+  type CreateLeaveTypeBody,
+  type UpdateLeaveTypeBody,
   leaveRequestQuerySchema,
 } from "./leave.schema";
 
@@ -136,6 +138,45 @@ export async function getAllRequestsHandler(req: Request, res: Response) {
     const query = leaveRequestQuerySchema.parse(req.query);
     const result = await leaveService.getAllRequests(company_id!, query);
     return res.json(result);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+// ─── Leave Type CRUD (HR_ADMIN) ──────────────────────────
+
+export async function createLeaveTypeHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    const result = await leaveService.createLeaveType(
+      company_id!,
+      req.body as CreateLeaveTypeBody,
+    );
+    return res.status(201).json(result);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function updateLeaveTypeHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    const result = await leaveService.updateLeaveType(
+      company_id!,
+      req.params.id,
+      req.body as UpdateLeaveTypeBody,
+    );
+    return res.json(result);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function deleteLeaveTypeHandler(req: Request, res: Response) {
+  try {
+    const { company_id } = (req as AuthenticatedRequest).user;
+    await leaveService.deleteLeaveType(company_id!, req.params.id);
+    return res.json({ message: "Leave type deleted" });
   } catch (err) {
     return handleError(err, res);
   }

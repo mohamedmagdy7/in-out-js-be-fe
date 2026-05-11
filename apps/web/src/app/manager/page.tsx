@@ -7,8 +7,10 @@ import {
   fetchTeamAttendance,
   fetchTeamMembers,
 } from "@/lib/api/manager";
+import { fetchStatus } from "@/lib/api/attendance";
 import { queryKeys } from "@/lib/query/keys";
 import { isoToday } from "@/lib/format";
+import { CheckInButton } from "@/components/employee/CheckInButton";
 import { PendingLeaveBanner } from "@/components/manager/PendingLeaveBanner";
 import { TeamSummaryBar } from "@/components/manager/TeamSummaryBar";
 import {
@@ -23,6 +25,12 @@ export default function ManagerOverviewPage() {
     queryKey: queryKeys.manager.summary,
     queryFn: fetchReportsSummary,
     refetchInterval: 120_000,
+  });
+
+  const statusQuery = useQuery({
+    queryKey: queryKeys.attendance.status,
+    queryFn: fetchStatus,
+    refetchInterval: 60_000,
   });
 
   const teamQuery = useQuery({
@@ -99,6 +107,8 @@ export default function ManagerOverviewPage() {
       </div>
 
       <PendingLeaveBanner count={pending} />
+
+      <CheckInButton status={statusQuery.data} />
 
       {summary ? (
         <TeamSummaryBar

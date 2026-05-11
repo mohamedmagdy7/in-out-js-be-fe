@@ -27,3 +27,20 @@ export const leaveRequestQuerySchema = z.object({
 });
 
 export type LeaveRequestQuery = z.infer<typeof leaveRequestQuerySchema>;
+
+// ─── Leave Type CRUD (HR_ADMIN) ──────────────────────────
+
+export const createLeaveTypeSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  days_per_year: z.coerce.number().int().min(0).max(365).default(0),
+  is_paid: z.boolean().default(true),
+});
+
+export const updateLeaveTypeSchema = z.object({
+  name: z.string().min(1).optional(),
+  days_per_year: z.coerce.number().int().min(0).max(365).optional(),
+  is_paid: z.boolean().optional(),
+});
+
+export type CreateLeaveTypeBody = z.infer<typeof createLeaveTypeSchema>;
+export type UpdateLeaveTypeBody = z.infer<typeof updateLeaveTypeSchema>;
