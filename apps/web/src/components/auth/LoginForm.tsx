@@ -35,6 +35,7 @@ export function LoginForm() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const {
     register,
@@ -61,6 +62,9 @@ export function LoginForm() {
         remember_me: values.remember_me,
       });
 
+      // Keep the button disabled through the route transition; the page
+      // will unmount before we'd need to flip this back.
+      setRedirecting(true);
       setAuth(result.user, result.access_token);
       router.replace(getRoleHome(result.user.role));
     } catch (err) {
@@ -73,6 +77,8 @@ export function LoginForm() {
       setServerError(msg);
     }
   };
+
+  const busy = isSubmitting || redirecting;
 
   return (
     <form
@@ -157,8 +163,8 @@ export function LoginForm() {
         type="submit"
         size="lg"
         fullWidth
-        loading={isSubmitting}
-        rightIcon={!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
+        loading={busy}
+        rightIcon={!busy ? <ArrowRight className="h-4 w-4" /> : null}
       >
         Sign in
       </Button>

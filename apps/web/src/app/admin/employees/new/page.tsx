@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -20,6 +21,7 @@ import {
 export default function NewEmployeePage() {
   const router = useRouter();
   const qc = useQueryClient();
+  const [redirecting, setRedirecting] = useState(false);
 
   const departmentsQuery = useQuery({
     queryKey: queryKeys.admin.departments,
@@ -40,6 +42,8 @@ export default function NewEmployeePage() {
       toast.success("Employee created. Welcome email sent.");
       qc.invalidateQueries({ queryKey: ["admin", "employees"] });
       qc.invalidateQueries({ queryKey: queryKeys.admin.companyStats });
+      // Keep the button disabled through the route transition.
+      setRedirecting(true);
       router.push("/admin/employees");
     },
     onError: (err) => {
@@ -81,7 +85,7 @@ export default function NewEmployeePage() {
         managers={managersQuery.data?.data ?? []}
         onSubmit={onSubmit}
         onCancel={() => router.push("/admin/employees")}
-        isSubmitting={mutation.isPending}
+        isSubmitting={mutation.isPending || redirecting}
       />
     </div>
   );
