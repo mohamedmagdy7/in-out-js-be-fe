@@ -178,6 +178,90 @@ export async function inviteAdmin(companyId: string, body: InviteAdminBody) {
   return user;
 }
 
+export async function getPlatformStats() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [
+    totalCompanies,
+    activeCompanies,
+    totalEmployees,
+    checkedInToday,
+    recentCompanies,
+  ] = await Promise.all([
+    db.company.count(),
+    db.company.count({ where: { is_active: true } }),
+    db.user.count({ where: { is_active: true, company_id: { not: null } } }),
+    db.attendanceSession.count({
+      where: {
+        check_in_at: { gte: today },
+      },
+    }),
+    db.company.findMany({
+      orderBy: { created_at: "desc" },
+      take: 5,
+      include: { _count: { select: { users: true } } },
+    }),
+  ]);
+
+  return {
+    total_companies: totalCompanies,
+    active_companies: activeCompanies,
+    total_employees: totalEmployees,
+    checked_in_today: checkedInToday,
+    recent_companies: recentCompanies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      timezone: c.timezone,
+      is_active: c.is_active,
+      created_at: c.created_at,
+      employee_count: c._count.users,
+    })),
+  };
+}
+
+export async function setCompanyAdminActive(
+  companyId: string,
+  userId: string,
+  isActive: boolean,
+) {
+  const user = await db.user.findFirst({
+    where: { id: userId, company_id: companyId, role: "HR_ADMIN" },
+  });
+  if (!user) throw new CompanyError("HR admin not found", 404);
+  return db.user.update({
+    where: { id: userId },
+    data: { is_active: isActive },
+    select: {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      is_active: true,
+      created_at: true,
+    },
+  });
+}
+
+export async function listCompanyAdmins(companyId: string) {
+  const company = await db.company.findUnique({ where: { id: companyId } });
+  if (!company) throw new CompanyError("Company not found", 404);
+
+  return db.user.findMany({
+    where: { company_id: companyId, role: "HR_ADMIN" },
+    select: {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      is_active: true,
+      created_at: true,
+    },
+    orderBy: { created_at: "desc" },
+  });
+}
+
 export async function getCompanyStats(companyId: string) {
   const company = await db.company.findUnique({ where: { id: companyId } });
   if (!company) {

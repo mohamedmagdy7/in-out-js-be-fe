@@ -212,6 +212,52 @@ export type AttendanceReportResponse = {
   employees: AttendanceReportRow[];
 };
 
+// ─── Super Admin (platform) ──────────────────────────────
+
+export type CompanyRow = {
+  id: string;
+  name: string;
+  slug: string;
+  timezone: string;
+  daily_hours_threshold: number;
+  weekend_days: number[];
+  logo_url: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  employee_count: number;
+};
+
+export type CompaniesListResponse = {
+  data: CompanyRow[];
+  pagination: Pagination & { total_pages: number };
+};
+
+export type PlatformStats = {
+  total_companies: number;
+  active_companies: number;
+  total_employees: number;
+  checked_in_today: number;
+  recent_companies: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    timezone: string;
+    is_active: boolean;
+    created_at: string;
+    employee_count: number;
+  }>;
+};
+
+export type CompanyAdmin = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  created_at: string;
+};
+
 // ─── Admin (HR) ──────────────────────────────────────────
 
 export type Department = {

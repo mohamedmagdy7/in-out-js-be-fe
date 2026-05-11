@@ -19,6 +19,9 @@ import {
   getMyCompanyHandler,
   updateMyCompanyHandler,
   getMyCompanyStatsHandler,
+  platformStatsHandler,
+  listCompanyAdminsHandler,
+  setCompanyAdminActiveHandler,
 } from "./companies.controller";
 
 const router: IRouter = Router();
@@ -50,6 +53,7 @@ router.get(
 // All routes below require SUPER_ADMIN
 router.use(authenticate, authorize("SUPER_ADMIN"));
 
+router.get("/platform/stats", platformStatsHandler);
 router.get("/", listHandler);
 router.post("/", validate(createCompanySchema), createHandler);
 router.get("/:id", getHandler);
@@ -57,5 +61,7 @@ router.patch("/:id", validate(updateCompanySchema), updateHandler);
 router.delete("/:id", deleteHandler);
 router.post("/:id/invite-admin", validate(inviteAdminSchema), inviteAdminHandler);
 router.get("/:id/stats", statsHandler);
+router.get("/:id/admins", listCompanyAdminsHandler);
+router.patch("/:id/admins/:userId", setCompanyAdminActiveHandler);
 
 export default router;

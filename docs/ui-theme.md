@@ -135,9 +135,9 @@ The minimal authenticated-page chrome. Sticky header with brand mark, user avata
 </RoleShell>
 ```
 
-### Tabbed role shells: `EmployeeShell`, `ManagerShell`, `AdminShell`
+### Tabbed role shells: `EmployeeShell`, `ManagerShell`, `AdminShell`, `SuperAdminShell`
 
-For roles with multiple sub-routes, the shells in `components/employee/EmployeeShell.tsx`, `components/manager/ManagerShell.tsx`, and `components/admin/AdminShell.tsx` use the same sticky header but add a secondary tab bar that highlights the active route via a 0.5px primary underline. The page itself owns its title + subtitle (no `title` prop on the shell). The pattern:
+For roles with multiple sub-routes, the shells in `components/employee/EmployeeShell.tsx`, `components/manager/ManagerShell.tsx`, `components/admin/AdminShell.tsx`, and `components/superadmin/SuperAdminShell.tsx` use the same sticky header but add a secondary tab bar that highlights the active route via a 0.5px primary underline. The page itself owns its title + subtitle (no `title` prop on the shell). The pattern:
 
 ```tsx
 // app/<role>/layout.tsx
@@ -195,7 +195,8 @@ apps/web/src/
     ├── auth/                         ← AuthGuard, RoleGuard, RoleShell, LoginForm, LogoutButton
     ├── employee/                     ← EmployeeShell + employee-only widgets (Task 12)
     ├── manager/                      ← ManagerShell + manager-only widgets (Task 13)
-    └── admin/                        ← AdminShell, KpiCard, LiveCheckInFeed, EmployeeTable, EmployeeForm, AttendanceOverrideModal, ManualMarkModal, WeekendDaysField (Task 14)
+    ├── admin/                        ← AdminShell, KpiCard, LiveCheckInFeed, EmployeeTable, EmployeeForm, AttendanceOverrideModal, ManualMarkModal, WeekendDaysField (Task 14)
+    └── superadmin/                   ← SuperAdminShell, CompanyTable, HRAdminTable, AddHRAdminModal, PasswordStrength (Task 15)
 tailwind.config.ts                    ← maps CSS variables onto Tailwind tokens
 ```
 

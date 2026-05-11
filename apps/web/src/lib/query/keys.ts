@@ -23,6 +23,16 @@ export const queryKeys = {
     report: (params: Record<string, unknown> = {}) =>
       ["manager", "report", params] as const,
   },
+  superadmin: {
+    platform: ["superadmin", "platform"] as const,
+    companies: (params: Record<string, unknown> = {}) =>
+      ["superadmin", "companies", params] as const,
+    company: (id: string) => ["superadmin", "company", id] as const,
+    companyStats: (id: string) =>
+      ["superadmin", "company-stats", id] as const,
+    companyAdmins: (id: string) =>
+      ["superadmin", "company-admins", id] as const,
+  },
   admin: {
     employees: (params: Record<string, unknown> = {}) =>
       ["admin", "employees", params] as const,

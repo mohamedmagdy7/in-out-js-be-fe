@@ -80,6 +80,38 @@ export async function statsHandler(req: Request, res: Response) {
   }
 }
 
+export async function platformStatsHandler(_req: Request, res: Response) {
+  try {
+    const stats = await companiesService.getPlatformStats();
+    return res.json(stats);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function listCompanyAdminsHandler(req: Request, res: Response) {
+  try {
+    const admins = await companiesService.listCompanyAdmins(req.params.id);
+    return res.json(admins);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
+export async function setCompanyAdminActiveHandler(req: Request, res: Response) {
+  try {
+    const { is_active } = req.body as { is_active: boolean };
+    const result = await companiesService.setCompanyAdminActive(
+      req.params.id,
+      req.params.userId,
+      is_active,
+    );
+    return res.json(result);
+  } catch (err) {
+    return handleError(err, res);
+  }
+}
+
 // HR_ADMIN: their own company
 export async function getMyCompanyHandler(req: Request, res: Response) {
   try {

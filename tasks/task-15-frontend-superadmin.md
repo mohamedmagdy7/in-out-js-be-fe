@@ -1,6 +1,7 @@
-# Task 15 — Frontend: Super Admin Panel
+# Task 15 — Frontend: Super Admin Panel [Done]
 
 ## Goal
+
 The SaaS control panel. Only `SUPER_ADMIN` users see this. Manage all companies, view platform-wide stats, and create HR admin accounts.
 
 ## Pages
@@ -17,6 +18,7 @@ The SaaS control panel. Only `SUPER_ADMIN` users see this. Manage all companies,
 ## Platform Overview (`/superadmin`)
 
 ### Platform Stats
+
 ```
 ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
 │ Total Companies│ │ Active Companies│ │ Total Employees│ │ Check-Ins Today│
@@ -25,6 +27,7 @@ The SaaS control panel. Only `SUPER_ADMIN` users see this. Manage all companies,
 ```
 
 ### Recently Created Companies
+
 Table of the 5 most recently created companies with: Name | Slug | Employees | Status | Created At
 
 ---
@@ -32,6 +35,7 @@ Table of the 5 most recently created companies with: Name | Slug | Employees | S
 ## Companies List (`/superadmin/companies`)
 
 ### Table
+
 Columns: Logo | Company Name | Slug | Timezone | Employees | Status | Created | Actions
 
 - Search by name or slug
@@ -39,6 +43,7 @@ Columns: Logo | Company Name | Slug | Timezone | Employees | Status | Created | 
 - "Create Company" button
 
 ### Actions per row
+
 - View details → `/superadmin/companies/:id`
 - Deactivate/Reactivate (toggle with confirmation modal)
 
@@ -47,12 +52,14 @@ Columns: Logo | Company Name | Slug | Timezone | Employees | Status | Created | 
 ## Create Company (`/superadmin/companies/new`)
 
 **Step 1 — Company Info**:
+
 - Company Name (required)
 - Slug (auto-generated from name, editable, validated as URL-safe)
 - Timezone (searchable dropdown of IANA timezones)
 - Daily Hours Threshold (number, default 8)
 
 **Step 2 — First HR Admin**:
+
 - First Name, Last Name
 - Email
 - Password (with strength indicator)
@@ -60,6 +67,7 @@ Columns: Logo | Company Name | Slug | Timezone | Employees | Status | Created | 
 **Submit** → creates company + HR admin in one action.
 
 Show a success screen with:
+
 - Company details
 - HR Admin credentials
 - "Copy credentials to clipboard" button
@@ -70,28 +78,35 @@ Show a success screen with:
 ## Company Detail (`/superadmin/companies/:id`)
 
 ### Header
+
 Company name, slug, logo, status badge, timezone, created date.
 
 **Actions**: Edit settings | Deactivate | View as HR Admin (impersonation — future feature, show as disabled button for now)
 
 ### Stats Section
+
 Real-time company stats pulled from `GET /api/companies/:id/stats`:
+
 ```
 Active Employees: 40 | Departments: 5 | Checked In Today: 35 | On Leave: 2
 ```
 
 ### HR Admins Tab
+
 Table of HR_ADMIN users for this company:
+
 - Name | Email | Last Login | Status
 - "Add HR Admin" button → modal form (email, name, password)
 - Deactivate HR Admin
 
 ### Company Settings Tab
+
 Read-only view of: timezone, daily hours threshold, leave types, shifts.
 
 ---
 
 ## Component Structure
+
 ```
 apps/web/src/app/(superadmin)/
 ├── superadmin/
@@ -114,10 +129,12 @@ apps/web/src/components/superadmin/
 ---
 
 ## Multi-Step Form State
+
 Use `react-hook-form` with step tracking:
+
 ```typescript
-const [step, setStep] = useState<1 | 2>(1)
-const form = useForm<CreateCompanyFormData>()
+const [step, setStep] = useState<1 | 2>(1);
+const form = useForm<CreateCompanyFormData>();
 
 // Step 1: company fields
 // Step 2: HR admin fields
@@ -127,6 +144,7 @@ const form = useForm<CreateCompanyFormData>()
 ---
 
 ## Acceptance Criteria
+
 - [ ] Platform stats reflect real counts from the API
 - [ ] Slug auto-generates from company name (lowercased, spaces → dashes)
 - [ ] Slug field validates: only lowercase letters, numbers, hyphens
