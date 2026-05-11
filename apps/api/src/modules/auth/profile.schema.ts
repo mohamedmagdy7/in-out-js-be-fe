@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { validatePassword } from "@repo/shared";
+
+const passwordField = z.string().superRefine((value, ctx) => {
+  const error = validatePassword(value);
+  if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+});
 
 export const updateProfileSchema = z
   .object({
@@ -13,10 +19,7 @@ export type UpdateProfileBody = z.infer<typeof updateProfileSchema>;
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, "Current password is required"),
-    new_password: z
-      .string()
-      .min(8, "New password must be at least 8 characters")
-      .max(200),
+    new_password: passwordField,
   })
   .strict();
 

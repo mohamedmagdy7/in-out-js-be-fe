@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { validatePassword } from "@repo/shared";
+
+const passwordField = z.string().superRefine((value, ctx) => {
+  const error = validatePassword(value);
+  if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+});
 
 const weekendDaysSchema = z
   .array(z.number().int().min(0).max(6))
@@ -30,7 +36,7 @@ export const inviteAdminSchema = z.object({
   email: z.string().email("Invalid email"),
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordField,
 });
 
 // Settings HR_ADMIN can manage for their own company.

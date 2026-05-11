@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AxiosError } from "axios";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   deactivateEmployee,
   fetchDepartments,
@@ -115,8 +116,9 @@ export default function AdminEmployeesPage() {
   });
 
   const onResetSubmit = () => {
-    if (resetPassword.length < 8) {
-      setResetError("Must be at least 8 characters");
+    const err = validatePassword(resetPassword);
+    if (err) {
+      setResetError(err);
       return;
     }
     if (!resetTarget) return;
@@ -312,11 +314,17 @@ export default function AdminEmployeesPage() {
             type="password"
             value={resetPassword}
             onChange={(e) => setResetPassword(e.target.value)}
-            placeholder="At least 8 characters"
+            placeholder="New password"
             invalid={!!resetError}
             autoFocus
           />
-          {resetError ? <FieldError>{resetError}</FieldError> : null}
+          {resetError ? (
+            <FieldError>{resetError}</FieldError>
+          ) : (
+            <span className="text-xs text-foreground-muted">
+              {PASSWORD_REQUIREMENTS}
+            </span>
+          )}
         </div>
       </Modal>
     </div>

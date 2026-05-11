@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AxiosError } from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   Alert,
   Button,
@@ -22,9 +23,10 @@ import { logout } from "@/lib/auth/auth-provider";
 const schema = z
   .object({
     current_password: z.string().min(1, "Current password is required"),
-    new_password: z
-      .string()
-      .min(8, "New password must be at least 8 characters"),
+    new_password: z.string().superRefine((value, ctx) => {
+      const error = validatePassword(value);
+      if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+    }),
     confirm_password: z.string(),
   })
   .refine((v) => v.new_password === v.confirm_password, {
@@ -156,7 +158,11 @@ export function ChangePasswordForm() {
           />
           {errors.new_password ? (
             <FieldError>{errors.new_password.message}</FieldError>
-          ) : null}
+          ) : (
+            <span className="text-xs text-foreground-muted">
+              {PASSWORD_REQUIREMENTS}
+            </span>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

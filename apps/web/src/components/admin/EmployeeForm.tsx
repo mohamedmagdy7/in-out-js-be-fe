@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   Button,
   FieldError,
@@ -16,7 +17,10 @@ const createSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),
   last_name: z.string().trim().min(1, "Last name is required"),
   email: z.string().trim().email("Invalid email"),
-  password: z.string().min(8, "Must be at least 8 characters"),
+  password: z.string().superRefine((value, ctx) => {
+    const error = validatePassword(value);
+    if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+  }),
   role: z.enum(["EMPLOYEE", "MANAGER"]),
   department_id: z.string().optional(),
   shift_id: z.string().optional(),
@@ -212,7 +216,7 @@ function Fields({
           <Field
             label="Password"
             error={(errors as any).password?.message}
-            hint="At least 8 characters. The employee will be emailed their welcome credentials."
+            hint={`${PASSWORD_REQUIREMENTS} The employee will be emailed their welcome credentials.`}
           >
             <Input
               type="password"

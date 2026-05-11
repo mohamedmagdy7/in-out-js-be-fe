@@ -1,8 +1,14 @@
 import { z } from "zod";
+import { validatePassword } from "@repo/shared";
+
+const passwordField = z.string().superRefine((value, ctx) => {
+  const error = validatePassword(value);
+  if (error) ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
+});
 
 export const createEmployeeSchema = z.object({
   email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordField,
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   role: z.enum(["EMPLOYEE", "MANAGER"], {
@@ -25,7 +31,7 @@ export const updateEmployeeSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  new_password: z.string().min(8, "Password must be at least 8 characters"),
+  new_password: passwordField,
 });
 
 export type CreateEmployeeBody = z.infer<typeof createEmployeeSchema>;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   Button,
   FieldError,
@@ -46,7 +47,8 @@ export function AddHRAdminModal({ open, onClose, onSubmit, isSubmitting }: Props
     if (!email.trim()) next.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       next.email = "Invalid email";
-    if (password.length < 8) next.password = "Must be at least 8 characters";
+    const pwErr = validatePassword(password);
+    if (pwErr) next.password = pwErr;
     setErrors(next);
     if (Object.keys(next).length > 0) return;
     onSubmit({
@@ -122,12 +124,16 @@ export function AddHRAdminModal({ open, onClose, onSubmit, isSubmitting }: Props
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             invalid={!!errors.password}
-            placeholder="At least 8 characters"
+            placeholder="Password"
           />
           <PasswordStrength password={password} />
           {errors.password ? (
             <FieldError>{errors.password}</FieldError>
-          ) : null}
+          ) : (
+            <span className="text-xs text-foreground-muted">
+              {PASSWORD_REQUIREMENTS}
+            </span>
+          )}
         </div>
       </div>
     </Modal>

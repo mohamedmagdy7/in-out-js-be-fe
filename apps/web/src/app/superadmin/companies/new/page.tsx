@@ -12,6 +12,7 @@ import {
   Copy,
   ExternalLink,
 } from "lucide-react";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   createCompany,
   inviteCompanyAdmin,
@@ -194,8 +195,8 @@ export default function NewCompanyPage() {
     if (!step2.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(step2.email))
       errs.email = "Invalid email";
-    if (step2.password.length < 8)
-      errs.password = "Password must be at least 8 characters";
+    const pwErr = validatePassword(step2.password);
+    if (pwErr) errs.password = pwErr;
     setStep2Errors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -395,14 +396,15 @@ export default function NewCompanyPage() {
                     setStep2({ ...step2, password: e.target.value })
                   }
                   invalid={!!step2Errors.password}
-                  placeholder="At least 8 characters"
+                  placeholder="Password"
                 />
                 <PasswordStrength password={step2.password} />
                 {step2Errors.password ? (
                   <FieldError>{step2Errors.password}</FieldError>
                 ) : (
                   <span className="text-xs text-foreground-muted">
-                    Shared once on the success screen — copy or save it.
+                    {PASSWORD_REQUIREMENTS} Shared once on the success
+                    screen — copy or save it.
                   </span>
                 )}
               </div>

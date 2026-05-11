@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { PASSWORD_REQUIREMENTS, validatePassword } from "@repo/shared";
 import {
   fetchDepartments,
   fetchEmployee,
@@ -279,8 +280,9 @@ function PasswordTab({ id }: { id: string }) {
   });
 
   const submit = () => {
-    if (password.length < 8) {
-      setError("Must be at least 8 characters");
+    const err = validatePassword(password);
+    if (err) {
+      setError(err);
       return;
     }
     setError(null);
@@ -303,10 +305,16 @@ function PasswordTab({ id }: { id: string }) {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          placeholder="New password"
           invalid={!!error}
         />
-        {error ? <FieldError>{error}</FieldError> : null}
+        {error ? (
+          <FieldError>{error}</FieldError>
+        ) : (
+          <span className="text-xs text-foreground-muted">
+            {PASSWORD_REQUIREMENTS}
+          </span>
+        )}
       </div>
       <div className="flex justify-end">
         <Button onClick={submit} loading={mutation.isPending}>
