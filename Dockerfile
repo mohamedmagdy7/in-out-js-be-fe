@@ -2,9 +2,14 @@
 # Build from repo root:  docker build -t checkin-api .
 # Run:                   docker run --rm -p 8000:8000 --env-file .env checkin-api
 
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
+
+# Prisma needs openssl + ca-certificates on Debian slim images
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 # pnpm via corepack; tsx runs TS workspace deps directly since @repo/* export src/*.ts
 RUN corepack enable \
@@ -28,6 +33,7 @@ COPY packages/shared packages/shared
 RUN pnpm --filter @repo/db exec prisma generate
 
 ENV NODE_ENV=production
+ENV PORT=8000
 EXPOSE 8000
 
 # Apply migrations on each boot, then start the API.
