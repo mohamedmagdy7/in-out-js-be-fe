@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as profileService from "./profile.service";
 import { AuthError } from "./auth.service";
+import { CLEAR_COOKIE_OPTIONS } from "./auth.controller";
 import type { AuthenticatedRequest } from "../../middleware/authenticate";
 import type {
   UpdateProfileBody,
@@ -45,7 +46,7 @@ export async function changePasswordHandler(req: Request, res: Response) {
       user.id,
       req.body as ChangePasswordBody,
     );
-    res.clearCookie("refresh_token", { path: "/" });
+    res.clearCookie("refresh_token", CLEAR_COOKIE_OPTIONS);
     return res.json(result);
   } catch (err) {
     return handleError(err, res);
