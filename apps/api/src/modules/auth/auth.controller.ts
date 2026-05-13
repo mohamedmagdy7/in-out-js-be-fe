@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: isProduction ? ("none" as const) : ("strict" as const),
+  sameSite: "strict" as const,
   secure: isProduction,
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -16,7 +16,7 @@ const COOKIE_OPTIONS = {
 
 export const CLEAR_COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: isProduction ? ("none" as const) : ("strict" as const),
+  sameSite: "strict" as const,
   secure: isProduction,
   path: "/",
 };
